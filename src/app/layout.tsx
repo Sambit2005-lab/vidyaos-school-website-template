@@ -1,0 +1,18 @@
+import { AppProvider } from "@/lib/AppContext";
+import "./globals.css";
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body className="antialiased">
+        <AppProvider>
+          {children}
+        </AppProvider>
+      </body>
+    </html>
+  );
+}
