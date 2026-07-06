@@ -1,8 +1,22 @@
 import { db } from "./firebase";
 import {
-  collection, collectionGroup, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
-  query, where, orderBy, onSnapshot, type Unsubscribe,
-  setDoc, Timestamp, serverTimestamp, type Query
+  collection as firestoreCollection,
+  collectionGroup as firestoreCollectionGroup,
+  doc as firestoreDoc,
+  getDoc as firestoreGetDoc,
+  getDocs as firestoreGetDocs,
+  addDoc as firestoreAddDoc,
+  updateDoc as firestoreUpdateDoc,
+  deleteDoc as firestoreDeleteDoc,
+  query as firestoreQuery,
+  where,
+  orderBy,
+  onSnapshot as firestoreOnSnapshot,
+  type Unsubscribe,
+  setDoc as firestoreSetDoc,
+  Timestamp,
+  serverTimestamp,
+  type Query
 } from "firebase/firestore";
 import type {
   Organization, School, Student, Teacher, Salary, AdmissionLead,
@@ -11,6 +25,62 @@ import type {
   TeacherClass, Homework, TeacherMonthlyReport, TeacherAssignment,
   MonthlyReportEntry,
 } from "./data";
+
+// Safe wrapper functions to prevent client-side crashes if db is not initialized
+const collection = (database: any, path: string, ...pathSegments: string[]) => {
+  if (!database) return null as any;
+  return firestoreCollection(database, path, ...pathSegments);
+};
+
+const collectionGroup = (database: any, collectionId: string) => {
+  if (!database) return null as any;
+  return firestoreCollectionGroup(database, collectionId);
+};
+
+const doc = (database: any, path: string, ...pathSegments: string[]) => {
+  if (!database) return null as any;
+  return firestoreDoc(database, path, ...pathSegments);
+};
+
+const onSnapshot = (q: any, onNext: any, onError?: any) => {
+  if (!q) return (() => {}) as any;
+  return firestoreOnSnapshot(q, onNext, onError);
+};
+
+const query = (base: any, ...queryConstraints: any[]) => {
+  if (!base) return null as any;
+  return firestoreQuery(base, ...queryConstraints);
+};
+
+const getDocs = async (q: any) => {
+  if (!q) return { docs: [] } as any;
+  return firestoreGetDocs(q);
+};
+
+const getDoc = async (ref: any) => {
+  if (!ref) return { exists: () => false, data: () => null } as any;
+  return firestoreGetDoc(ref);
+};
+
+const addDoc = async (ref: any, data: any) => {
+  if (!ref) return null as any;
+  return firestoreAddDoc(ref, data);
+};
+
+const updateDoc = async (ref: any, data: any) => {
+  if (!ref) return null as any;
+  return firestoreUpdateDoc(ref, data);
+};
+
+const deleteDoc = async (ref: any) => {
+  if (!ref) return null as any;
+  return firestoreDeleteDoc(ref);
+};
+
+const setDoc = async (ref: any, data: any, options?: any) => {
+  if (!ref) return null as any;
+  return firestoreSetDoc(ref, data, options);
+};
 
 export { onSnapshot, query, where, orderBy, collection, doc };
 export type { Unsubscribe };
