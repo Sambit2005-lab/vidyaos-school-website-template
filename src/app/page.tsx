@@ -1,6 +1,8 @@
 import { SchoolWebsiteView } from "@/components/school-admin/SchoolWebsiteView";
 import { fetchSchoolConfig } from "@/lib/firestoreService";
 
+export const dynamic = "force-dynamic";
+
 // Server-side dynamic metadata rendering for search engine crawlers
 export async function generateMetadata() {
   const schoolId = process.env.VITE_SCHOOL_ID || "school-1";
