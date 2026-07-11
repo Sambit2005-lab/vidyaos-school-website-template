@@ -632,14 +632,23 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
     const cacheKey = "vidyaos_school_website_" + sid;
     const cacheTimeKey = "vidyaos_school_website_time_" + sid;
     
+    console.log("🔍 [VidyaOS Website] Init Fetch Config:", {
+      demoMode,
+      tenantId,
+      schoolId: sid,
+      hasCacheKey: !!safeLocalStorage.getItem(cacheKey)
+    });
+
     const localData = safeLocalStorage.getItem(cacheKey);
     const localTime = safeLocalStorage.getItem(cacheTimeKey);
     
     if (localData) {
       try {
-        setLiveSchoolData(JSON.parse(localData));
+        const parsed = JSON.parse(localData);
+        console.log("💾 [VidyaOS Website] Loaded config from LocalStorage Cache:", parsed);
+        setLiveSchoolData(parsed);
       } catch (e) {
-        console.error(e);
+        console.error("❌ [VidyaOS Website] Cache parse error:", e);
       }
     }
 
@@ -648,16 +657,25 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
       const cacheDuration = 5 * 60 * 1000; // 5 minutes cache
       
       const shouldFetch = !localData || !localTime || (now - Number(localTime)) > cacheDuration;
+      console.log(`🌐 [VidyaOS Website] Checking database fetch. shouldFetch: ${shouldFetch}`);
       
       if (shouldFetch) {
+        console.log(`📡 [VidyaOS Website] Fetching from Firestore: tenants/${tenantId}/schools/${sid}`);
         fetchSchoolConfig(tenantId, sid).then((data) => {
           if (data) {
+            console.log("✅ [VidyaOS Website] Firestore fetch successful! Received data:", data);
             setLiveSchoolData(data);
             safeLocalStorage.setItem(cacheKey, JSON.stringify(data));
             safeLocalStorage.setItem(cacheTimeKey, String(now));
+          } else {
+            console.warn(`⚠️ [VidyaOS Website] No document found at tenants/${tenantId}/schools/${sid}`);
           }
-        }).catch(() => {});
+        }).catch((err) => {
+          console.error("❌ [VidyaOS Website] Firestore fetch error:", err);
+        });
       }
+    } else {
+      console.log("ℹ️ [VidyaOS Website] Demo mode is active. Firestore fetch bypassed.");
     }
   }, [demoMode, tenantId, propSchoolId]);
 
