@@ -63,7 +63,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [tenantId, setTenantId] = useState(() => {
-    return (typeof process !== "undefined" && process.env && (process.env.NEXT_PUBLIC_TENANT_ID || process.env.VITE_TENANT_ID)) || "org_zpo8ip";
+    return (typeof process !== "undefined" && process.env && (process.env.NEXT_PUBLIC_TENANT_ID || process.env.VITE_TENANT_ID)) || "sansthan-1";
   });
   const [loading, setLoading] = useState(true);
 
