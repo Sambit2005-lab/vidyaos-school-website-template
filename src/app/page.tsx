@@ -3,8 +3,8 @@ import { fetchSchoolConfig } from "@/lib/firestoreService";
 
 // Server-side dynamic metadata rendering for search engine crawlers
 export async function generateMetadata() {
-  const schoolId = process.env.VITE_SCHOOL_ID || "school-1";
-  const tenantId = process.env.VITE_TENANT_ID || "demo-tenant";
+  const schoolId = process.env.VITE_SCHOOL_ID || "school_dzwvtl";
+  const tenantId = process.env.VITE_TENANT_ID || "org_zpo8ip";
   
   try {
     const schoolConfig = await fetchSchoolConfig(tenantId, schoolId);
@@ -25,7 +25,7 @@ export async function generateMetadata() {
 }
 
 export default async function Page() {
-  const schoolId = process.env.VITE_SCHOOL_ID || "school-1";
+  const schoolId = process.env.VITE_SCHOOL_ID || "school_dzwvtl";
   return (
     <div className="min-h-screen bg-dark-950 text-white">
       <SchoolWebsiteView schoolId={schoolId} />
