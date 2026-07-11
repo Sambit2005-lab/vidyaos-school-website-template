@@ -19,6 +19,8 @@ import { useDynamicSEO } from "../../lib/useDynamicSEO";
 import { cn } from "../../lib/cn";
 import logoImg from "../../assets/Image 08-06-26 at 22.47.jpg";
 import { uploadToCloudinary } from "../../lib/cloudinary";
+import { setActiveSchoolConfig } from "../../lib/firebase";
+
 
 
 const safeLocalStorage = {
@@ -627,6 +629,11 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
   }, [selectedStudentResult, demoMode, localMarks, dbMarks]);
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("vidyaos_active_school_id");
+      localStorage.removeItem("vidyaos_active_school_config");
+    }
+
     const sid = propSchoolId || "1";
     // Check localStorage first for instant sandbox changes
     const cacheKey = "vidyaos_school_website_" + sid;
@@ -637,7 +644,11 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
     
     if (localData) {
       try {
-        setLiveSchoolData(JSON.parse(localData));
+        const parsed = JSON.parse(localData);
+        setLiveSchoolData(parsed);
+        if (parsed.firebaseConfig) {
+          setActiveSchoolConfig(sid, parsed.firebaseConfig);
+        }
       } catch (e) {
         console.error(e);
       }
@@ -653,12 +664,20 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
         fetchSchoolConfig(tenantId, sid).then((data) => {
           if (data) {
             setLiveSchoolData(data);
+            if (data.firebaseConfig) {
+              setActiveSchoolConfig(sid, data.firebaseConfig);
+            }
             safeLocalStorage.setItem(cacheKey, JSON.stringify(data));
             safeLocalStorage.setItem(cacheTimeKey, String(now));
           }
         }).catch(() => {});
       }
     }
+
+    return () => {
+      // Clear active config when navigating away or unmounting
+      setActiveSchoolConfig(null, null);
+    };
   }, [demoMode, tenantId, propSchoolId]);
 
   const school = useMemo(() => {

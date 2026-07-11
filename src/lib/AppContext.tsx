@@ -48,12 +48,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return "super-admin";
   });
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [demoMode, setDemoModeState] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("vidyaos_demo_mode") === "true";
-    }
-    return false;
-  });
+  const [demoMode, setDemoModeState] = useState<boolean>(false);
   const [demoLoggedIn, setDemoLoggedInState] = useState<boolean>(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("vidyaos_demo_logged_in") === "true";
