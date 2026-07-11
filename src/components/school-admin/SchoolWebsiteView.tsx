@@ -18,6 +18,8 @@ import { useStudents, useMarksRecords } from "../../lib/useData";
 import { useDynamicSEO } from "../../lib/useDynamicSEO";
 import { cn } from "../../lib/cn";
 import logoImg from "../../assets/Image 08-06-26 at 22.47.jpg";
+import { uploadToCloudinary } from "../../lib/cloudinary";
+
 
 const safeLocalStorage = {
   getItem: (key: string) => {
@@ -508,7 +510,7 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
     });
   };
 
-  const handleFeePaymentSubmit = (e: React.FormEvent) => {
+  const handleFeePaymentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!payStudentName || !payParentName || !payUtr || !payScreenshot) {
       alert("Please fill all fields and upload a screenshot.");
@@ -516,6 +518,18 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
     }
     setPaySubmitting(true);
     const sid = propSchoolId || "1";
+
+    // Upload proof dynamically to Cloudinary
+    let uploadedUrl = payScreenshot;
+    if (payScreenshot && payScreenshot.startsWith("data:")) {
+      try {
+        const cloudUrl = await uploadToCloudinary(payScreenshot, tenantId, sid);
+        if (cloudUrl) uploadedUrl = cloudUrl;
+      } catch (err) {
+        console.error("Failed to upload screenshot to Cloudinary, fallback to base64:", err);
+      }
+    }
+
     const newPayment = {
       id: `fp_${Date.now()}`,
       parentName: payParentName,
@@ -525,7 +539,7 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
       utr: payUtr,
       date: new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
       status: "Pending Verification",
-      screenshotUrl: payScreenshot,
+      screenshotUrl: uploadedUrl,
       months: paySelectedMonths,
     };
 
@@ -540,15 +554,13 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
     // Push Notification
     triggerNotification("Fee Payment Uploaded", `₹${payAmount.toLocaleString()} fee payment proof submitted by ${payStudentName} for ${paySelectedMonths.join(", ")}.`);
 
-    setTimeout(() => {
-      setPaySubmitting(false);
-      setPaySuccess(true);
-      setPayStudentName("");
-      setPayParentName("");
-      setPayUtr("");
-      setPayScreenshot("");
-      setPaySelectedMonths([]);
-    }, 1200);
+    setPaySubmitting(false);
+    setPaySuccess(true);
+    setPayStudentName("");
+    setPayParentName("");
+    setPayUtr("");
+    setPayScreenshot("");
+    setPaySelectedMonths([]);
   };
 
   useEffect(() => {
