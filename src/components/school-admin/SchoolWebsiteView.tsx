@@ -444,6 +444,7 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
   const [searchStudentName, setSearchStudentName] = useState("");
   const [searchParentName, setSearchParentName] = useState("");
   const [searchClass, setSearchClass] = useState("1st");
+  const [searchDob, setSearchDob] = useState("");
   const [selectedStudentResult, setSelectedStudentResult] = useState<any | null>(null);
   const [searchError, setSearchError] = useState("");
   const [reportLang, setReportLang] = useState<"en" | "or">("en");
@@ -587,18 +588,27 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
 
   const handleParentSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!searchStudentName || !searchParentName) {
-      setSearchError("Please enter both Student and Parent name.");
+    if (!searchStudentName || !searchParentName || !searchDob) {
+      setSearchError("Please enter Student Name, Parent Name, and Date of Birth.");
       setSelectedStudentResult(null);
       return;
     }
 
+    const formatInputDateToDb = (dateStr: string) => {
+      if (!dateStr) return "";
+      const [year, month, day] = dateStr.split("-");
+      return `${day}/${month}/${year}`;
+    };
+
     const sid = propSchoolId || "1";
+    const dbDob = formatInputDateToDb(searchDob);
+
     const match = students.find((s: any) => 
       s.name.toLowerCase().trim() === searchStudentName.toLowerCase().trim() &&
       s.parent.toLowerCase().trim() === searchParentName.toLowerCase().trim() &&
       s.class === searchClass &&
-      String(s.schoolId || 1) === String(sid)
+      String(s.schoolId || 1) === String(sid) &&
+      (s.dob === dbDob || s.dob === searchDob)
     );
 
     if (match) {
@@ -656,7 +666,7 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
 
     if (!demoMode) {
       const now = Date.now();
-      const cacheDuration = 5 * 60 * 1000; // 5 minutes cache
+      const cacheDuration = 0; // Disable cache for instant updates
       
       const shouldFetch = !localData || !localTime || (now - Number(localTime)) > cacheDuration;
       
@@ -2029,7 +2039,7 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
           </div>
 
           <div className="max-w-3xl mx-auto bg-gray-50 rounded-2xl border border-gray-100 p-6 sm:p-8 shadow-sm">
-            <form onSubmit={handleParentSearch} className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end mb-6">
+            <form onSubmit={handleParentSearch} className="grid grid-cols-1 sm:grid-cols-5 gap-4 items-end mb-6">
               <div className="sm:col-span-1">
                 <label className="block text-xs font-bold text-gray-700 mb-1">Class *</label>
                 <select className="w-full border border-gray-200 bg-white rounded-xl px-3 py-2.5 text-sm focus:outline-none" value={searchClass} onChange={e => setSearchClass(e.target.value)}>
@@ -2038,15 +2048,19 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                   ))}
                 </select>
               </div>
-              <div className="sm:col-span-1.5">
+              <div className="sm:col-span-1">
                 <label className="block text-xs font-bold text-gray-700 mb-1">Student Name *</label>
                 <input required placeholder="e.g. Rakesh Patra" className="w-full border border-gray-200 bg-white rounded-xl px-3 py-2.5 text-sm focus:outline-none" value={searchStudentName} onChange={e => setSearchStudentName(e.target.value)} />
               </div>
-              <div className="sm:col-span-1.5">
+              <div className="sm:col-span-1">
                 <label className="block text-xs font-bold text-gray-700 mb-1">Parent Name *</label>
                 <input required placeholder="Parent Name" className="w-full border border-gray-200 bg-white rounded-xl px-3 py-2.5 text-sm focus:outline-none" value={searchParentName} onChange={e => setSearchParentName(e.target.value)} />
               </div>
-              <div>
+              <div className="sm:col-span-1">
+                <label className="block text-xs font-bold text-gray-700 mb-1">Date of Birth *</label>
+                <input required type="date" className="w-full border border-gray-200 bg-white rounded-xl px-3 py-2.5 text-sm focus:outline-none text-gray-500" value={searchDob} onChange={e => setSearchDob(e.target.value)} />
+              </div>
+              <div className="sm:col-span-1">
                 <button type="submit" className="w-full bg-[#1D2D7A] hover:bg-[#15205E] text-white font-bold py-2.5 rounded-xl text-sm transition-all shadow-md">
                   Search
                 </button>
