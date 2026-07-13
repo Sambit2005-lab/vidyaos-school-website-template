@@ -2306,37 +2306,13 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                     
                     const sClass = selectedStudentResult.class || "1st";
                     const feeMatch = feeStructure.find((f: any) => f.class === sClass) || { admissionFee: 2000, tuitionFee: 800, transportFee: 500, additionalFee: 200, examFee: 500 };
-                    let tuitionFee = Number(feeMatch.tuitionFee || 0);
+                    const tuitionFee = Number(feeMatch.tuitionFee || 0);
                     const admissionFee = Number(feeMatch.admissionFee || 0);
-                    let transportFee = Number(selectedStudentResult.transportFee || 0);
-                    let examFee = Number(selectedStudentResult.additionalFee || selectedStudentResult.examFee || 0);
+                    const transportFee = Number(feeMatch.transportFee || 0);
+                    const additionalFee = Number(feeMatch.additionalFee || 0);
+                    const examFee = Number(feeMatch.examFee || 0);
 
-                    // Parse fee items dynamically from student's paid records if available
-                    if (studentFeeRecords.length > 0) {
-                      // Find the latest record containing particulars
-                      const recordWithFees = [...studentFeeRecords].reverse().find((r: any) => r.particulars && Array.isArray(r.particulars));
-                      if (recordWithFees) {
-                        let extractedTuition = 0;
-                        let extractedTransport = 0;
-                        let extractedAdditional = 0;
-                        recordWithFees.particulars.forEach((p: any) => {
-                          const pName = String(p.name || p.feeName || "").toLowerCase();
-                          const pAmount = Number(p.amount || p.paidAmount || 0);
-                          if (pName.includes("tuition")) {
-                            extractedTuition = pAmount;
-                          } else if (pName.includes("transport")) {
-                            extractedTransport = pAmount;
-                          } else {
-                            extractedAdditional += pAmount;
-                          }
-                        });
-                        if (extractedTuition > 0) tuitionFee = extractedTuition;
-                        if (extractedTransport > 0) transportFee = extractedTransport;
-                        if (extractedAdditional > 0) examFee = extractedAdditional;
-                      }
-                    }
-
-                    const monthlyTotal = tuitionFee + transportFee + examFee;
+                    const monthlyTotal = tuitionFee + transportFee + additionalFee;
 
                     // Fallback allocation if no explicit records exist in database but paidAmount > 0
                     if (maxPaidIndex === -1 && paid > 0) {
@@ -2383,7 +2359,7 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                         status = "OVERDUE";
                       }
 
-                      return { ...m, tuitionFee, transportFee, additionalFee: examFee, monthlyTotal, status, mYear };
+                      return { ...m, tuitionFee, transportFee, additionalFee, monthlyTotal, status, mYear };
                     });
 
                     const overdueMonths = monthsWithStatus.filter(m => m.status === "OVERDUE");
