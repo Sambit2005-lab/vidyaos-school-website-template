@@ -14,7 +14,7 @@ import {
 } from "recharts";
 import { useApp } from "../../lib/AppContext";
 import { fetchSchoolConfig, subscribeNotices, addAdmission } from "../../lib/firestoreService";
-import { useStudents, useMarksRecords } from "../../lib/useData";
+import { useStudents, useMarksRecords, useExams } from "../../lib/useData";
 import { useDynamicSEO } from "../../lib/useDynamicSEO";
 import { cn } from "../../lib/cn";
 import logoImg from "../../assets/Image 08-06-26 at 22.47.jpg";
@@ -368,6 +368,7 @@ function NavT({ en, or }: { en: string; or: string }) {
 export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?: () => void; schoolId?: string }) {
   const { demoMode, tenantId } = useApp();
   const students = useStudents();
+  const exams = useExams();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [visible, setVisible] = useState<Set<string>>(new Set());
@@ -2134,8 +2135,7 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                   ) : (
                     <div className="space-y-4">
                       {studentMarks.map((examRecord: any) => {
-                        const cachedExams = JSON.parse(safeLocalStorage.getItem("vidyaos_exams_data") || "[]");
-                        const examObj = cachedExams.find((e: any) => e.id === examRecord.examId);
+                        const examObj = exams.find((e: any) => e.id === examRecord.examId);
                         const examName = examObj ? examObj.examName : "Academic Test";
 
                         return (
