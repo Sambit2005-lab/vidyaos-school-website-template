@@ -2096,12 +2096,15 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                   </h4>
                   <div className="flex items-center gap-4">
                     <div className="flex-1 bg-gray-100 h-2 rounded-full overflow-hidden">
-                      <div className="bg-[#D4A017] h-full" style={{ width: "94%" }} />
+                      <div className="bg-[#D4A017] h-full" style={{ width: `${selectedStudentResult.attendancePercent || 0}%` }} />
                     </div>
-                    <span className="text-sm font-bold text-gray-800">94%</span>
+                    <span className="text-sm font-bold text-gray-800">{selectedStudentResult.attendancePercent || 0}%</span>
                   </div>
                   <p className="text-[10px] text-emerald-500 font-bold mt-1">
-                    {reportLang === "en" ? "Excellent! Regular Attendance status maintained." : "ଉତ୍କୃଷ୍ଟ! ନିୟମିତ ଉପସ୍ଥାନ ବଜାୟ ରହିଛି।"}
+                    {reportLang === "en" 
+                      ? `Present: ${selectedStudentResult.presentDays || 0} days | Absent: ${selectedStudentResult.absentDays || 0} days | Leaves: ${selectedStudentResult.leaveDays || 0} days`
+                      : `ଉପସ୍ଥିତ: ${selectedStudentResult.presentDays || 0} ଦିନ | ଅନୁପସ୍ଥିତ: ${selectedStudentResult.absentDays || 0} ଦିନ | ଛୁଟି: ${selectedStudentResult.leaveDays || 0} ଦିନ`
+                    }
                   </p>
                 </div>
 
@@ -2158,17 +2161,50 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                   <h4 className="text-sm font-bold text-gray-700 mb-2">
                     {reportLang === "en" ? "Fees Dues & Payment Status" : "ଦେୟ ବିବରଣୀ ସ୍ଥିତି"}
                   </h4>
-                  <div className="flex justify-between items-center p-3 bg-emerald-50 border border-emerald-100 rounded-xl">
-                    <div>
-                      <p className="text-xs font-bold text-emerald-800">
-                        {reportLang === "en" ? "Quarterly School Fee" : "ତ୍ରୈମାସିକ ବିଦ୍ୟାଳୟ ଫି"}
-                      </p>
-                      <p className="text-[10px] text-emerald-700/80">Paid on 15 Jun 2026</p>
-                    </div>
-                    <span className="text-xs font-bold bg-emerald-500 text-white px-2 py-0.5 rounded">
-                      {reportLang === "en" ? "PAID" : "ପରିଶୋଧିତ"}
-                    </span>
-                  </div>
+                  {(() => {
+                    const annual = Number(selectedStudentResult.annualFee || 0);
+                    const paid = Number(selectedStudentResult.paidAmount || 0);
+                    const due = annual - paid;
+                    const isPaid = due <= 0;
+
+                    return (
+                      <div className={`p-4 border rounded-xl space-y-2 ${isPaid ? "bg-emerald-50 border-emerald-100 text-emerald-800" : "bg-amber-50 border-amber-100 text-amber-800"}`}>
+                        <div className="flex justify-between items-center">
+                          <p className="text-xs font-bold">
+                            {reportLang === "en" ? "School Fee Status" : "ବିଦ୍ୟାଳୟ ଫି ସ୍ଥିତି"}
+                          </p>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${isPaid ? "bg-emerald-500 text-white" : "bg-amber-500 text-white"}`}>
+                            {isPaid 
+                              ? (reportLang === "en" ? "PAID" : "ପରିଶୋଧିତ")
+                              : (reportLang === "en" ? "DUE / PENDING" : "ବାକି ଅଛି")
+                            }
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 text-[10px] pt-1">
+                          <div>
+                            <p className="text-gray-400">{reportLang === "en" ? "Total Fee:" : "ମୋଟ ଫି:"}</p>
+                            <p className="font-bold text-gray-800">₹{annual.toLocaleString()}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400">{reportLang === "en" ? "Paid Amount:" : "ପରିଶୋଧିତ:"}</p>
+                            <p className="font-bold text-emerald-600">₹{paid.toLocaleString()}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400">{reportLang === "en" ? "Remaining Due:" : "ବାକି ଫି:"}</p>
+                            <p className={`font-bold ${due > 0 ? "text-red-500" : "text-gray-800"}`}>₹{due.toLocaleString()}</p>
+                          </div>
+                        </div>
+                        {selectedStudentResult.nextDueDate && due > 0 && (
+                          <p className="text-[9px] text-gray-400 italic pt-1">
+                            {reportLang === "en" 
+                              ? `Next Due Date: ${selectedStudentResult.nextDueDate}`
+                              : `ପରବର୍ତ୍ତୀ ଦେୟ ତାରିଖ: ${selectedStudentResult.nextDueDate}`
+                            }
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Teacher remarks */}
@@ -2177,9 +2213,9 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                     {reportLang === "en" ? "Class Teacher Feedback & Remarks:" : "ଶ୍ରେଣୀ ଶିକ୍ଷକଙ୍କ ମନ୍ତବ୍ୟ:"}
                   </span>
                   <p className="text-xs text-gray-600 leading-relaxed font-light italic">
-                    {reportLang === "en" 
+                    {selectedStudentResult.remarks || (reportLang === "en" 
                       ? `${selectedStudentResult.name} is a very attentive student. Shows keen interest in problem solving.`
-                      : `${selectedStudentResult.name} ଜଣେ ଅତି ମନୋଯୋଗୀ ଛାତ୍ର ଅଟନ୍ତି |`
+                      : `${selectedStudentResult.name} ଜଣେ ଅତି ମନୋଯୋଗୀ ଛାତ୍ର ଅଟନ୍ତି |`)
                     }
                   </p>
                 </div>
