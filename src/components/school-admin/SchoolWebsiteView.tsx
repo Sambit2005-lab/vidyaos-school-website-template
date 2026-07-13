@@ -439,6 +439,7 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
   const [payAmount, setPayAmount] = useState(1000);
   const [payUtr, setPayUtr] = useState("");
   const [payScreenshot, setPayScreenshot] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [paySubmitting, setPaySubmitting] = useState(false);
   const [paySuccess, setPaySuccess] = useState(false);
 
@@ -517,22 +518,20 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
 
   const handleFeePaymentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!payStudentName || !payParentName || !payUtr || !payScreenshot) {
+    if (!payStudentName || !payParentName || !selectedFile) {
       alert("Please fill all fields and upload a screenshot.");
       return;
     }
     setPaySubmitting(true);
     const sid = propSchoolId || "1";
 
-    // Upload proof dynamically to Cloudinary
-    let uploadedUrl = payScreenshot;
-    if (payScreenshot && payScreenshot.startsWith("data:")) {
-      try {
-        const cloudUrl = await uploadToCloudinary(payScreenshot, tenantId, sid);
-        if (cloudUrl) uploadedUrl = cloudUrl;
-      } catch (err) {
-        console.error("Failed to upload screenshot to Cloudinary, fallback to base64:", err);
-      }
+    // Upload file dynamically to Cloudinary
+    let uploadedUrl = "";
+    try {
+      const cloudUrl = await uploadToCloudinary(selectedFile, tenantId, sid);
+      if (cloudUrl) uploadedUrl = cloudUrl;
+    } catch (err) {
+      console.error("Failed to upload screenshot to Cloudinary, fallback to base64:", err);
     }
 
     const newPayment = {
@@ -541,7 +540,7 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
       studentName: payStudentName,
       class: payClass,
       amount: Number(payAmount),
-      utr: payUtr,
+      utr: `Screenshot_Uploaded_${Date.now().toString().slice(-4)}`,
       date: new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
       status: "Pending Verification",
       screenshotUrl: uploadedUrl,
@@ -565,6 +564,7 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
     setPayParentName("");
     setPayUtr("");
     setPayScreenshot("");
+    setSelectedFile(null);
     setPaySelectedMonths([]);
   };
 
@@ -2028,14 +2028,41 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                         <span className="text-[8px] text-gray-400">VidyaOS Solutions</span>
                       </div>
 
-                      <div className="space-y-3">
+                      <div className="space-y-3 flex-1 w-full">
                         <div>
-                          <label className="block text-xs font-semibold text-gray-600 mb-1">UTR / Trans. ID *</label>
-                          <input required placeholder="UTR1294829384" className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#1D2D7A]" value={payUtr} onChange={e => setPayUtr(e.target.value)} />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-semibold text-gray-600 mb-1">Receipt Screenshot *</label>
-                          <input required placeholder="Paste Screenshot URL / Link" className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#1D2D7A]" value={payScreenshot} onChange={e => setPayScreenshot(e.target.value)} />
+                          <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                            {reportLang === "en" ? "Receipt Screenshot *" : "ରସିଦ୍ ସ୍କ୍ରିନସଟ୍ *"}
+                          </label>
+                          <div className="relative group border-2 border-dashed border-gray-200 rounded-2xl p-4 hover:border-[#1D2D7A]/50 transition-all flex flex-col items-center bg-gray-50/50 cursor-pointer">
+                            <input
+                              required
+                              type="file"
+                              accept="image/*"
+                              className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  setSelectedFile(file);
+                                }
+                              }}
+                            />
+                            {selectedFile ? (
+                              <div className="text-center">
+                                <span className="text-[10px] bg-emerald-500/10 text-emerald-700 font-bold px-2 py-0.5 rounded-full border border-emerald-500/20">
+                                  ✓ File Selected
+                                </span>
+                                <p className="text-[10px] text-gray-500 font-medium mt-1 truncate max-w-[150px]">{selectedFile.name}</p>
+                              </div>
+                            ) : (
+                              <div className="text-center space-y-1">
+                                <span className="text-xl">📤</span>
+                                <p className="text-[10px] text-[#1D2D7A] font-bold">
+                                  {reportLang === "en" ? "Upload Screenshot File" : "ସ୍କ୍ରିନସଟ୍ ଅପଲୋଡ୍ କରନ୍ତୁ"}
+                                </p>
+                                <p className="text-[8px] text-gray-400">PNG, JPG, JPEG up to 5MB</p>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
