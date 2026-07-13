@@ -2293,20 +2293,11 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                     const overdueMonths = monthsWithStatus.filter(m => m.status === "OVERDUE");
                     const hasOverdue = overdueMonths.length > 0;
 
-                    // Next payment due date calculation:
-                    // If overdue months exist: 1st of first unpaid month
-                    // Else: 1st of next upcoming month (August 1st if current month is July/7)
-                    let resolvedDueDateStr = "";
-                    if (hasOverdue && foundFirstUnpaidMonth) {
-                      resolvedDueDateStr = `01-${foundFirstUnpaidMonth.nameEn}-${acadStartYear}`;
-                    } else {
-                      const nextMonthId = (currentMonth % 12) + 1; // 1-12 range
-                      const nextMonthObj = academicMonths.find(m => m.id === nextMonthId);
-                      const nextMonthYear = (nextMonthId === 1) ? acadStartYear + 1 : acadStartYear;
-                      if (nextMonthObj) {
-                        resolvedDueDateStr = `01-${nextMonthObj.nameEn}-${nextMonthYear}`;
-                      }
-                    }
+                    // Next payment due date is always 1st date of next month relative to current calendar date
+                    const nextMonthDate = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+                    const nextMonthName = nextMonthDate.toLocaleDateString("en-US", { month: "long" });
+                    const nextMonthYear = nextMonthDate.getFullYear();
+                    const resolvedDueDateStr = `01-${nextMonthName}-${nextMonthYear}`;
 
                     const overdueMonthsCount = overdueMonths.length;
                     let totalOverdueDues = overdueMonthsCount * tuitionFee;
