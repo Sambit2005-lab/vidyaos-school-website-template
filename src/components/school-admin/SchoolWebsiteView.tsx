@@ -2139,30 +2139,71 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                         const examObj = exams.find((e: any) => e.id === examRecord.examId);
                         const examName = examObj ? examObj.examName : "Academic Test";
 
+                        const studentClass = selectedStudentResult.class || "1st";
+                        const classKey = studentClass.endsWith("Class") ? studentClass : `${studentClass} Class`;
+                        const classConfig = examObj?.classes?.[studentClass] || examObj?.classes?.[classKey] || Object.values(examObj?.classes || {})[0];
+                        const maxMarks = (classConfig as any)?.maxMarks || 100;
+
                         return (
-                          <div key={examRecord.id} className="p-4 bg-gray-50 border border-gray-150 rounded-2xl text-left">
-                            <div className="flex justify-between items-center mb-3">
-                              <span className="text-xs font-bold text-gray-800">{examName}</span>
+                          <div key={examRecord.id} className="p-4 bg-white border border-gray-100 rounded-2xl shadow-sm text-left">
+                            {/* Exam Header */}
+                            <div className="flex justify-between items-center mb-4 pb-3 border-b border-gray-100">
+                              <div>
+                                <span className="text-xs font-bold text-gray-800 block">{examName}</span>
+                                <span className="text-[9px] text-gray-400 font-medium">Session: {examObj?.academicSession || "2025-26"}</span>
+                              </div>
                               {examRecord.rank && (
-                                <span className="text-[10px] bg-golden-500/10 text-golden-700 font-extrabold px-2 py-0.5 rounded-full border border-golden-500/20 flex items-center gap-1">
+                                <span className="text-[10px] bg-amber-500/10 text-amber-700 font-bold px-2.5 py-1 rounded-full border border-amber-500/20 flex items-center gap-1.5 shadow-sm">
                                   🏆 {reportLang === "en" ? `Rank #${examRecord.rank}` : `କ୍ରମ #${examRecord.rank}`}
                                 </span>
                               )}
                             </div>
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+
+                            {/* Subjects Score Grid */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                               {Object.keys(examRecord.subjectMarks).map((sub: string) => {
-                                const score = examRecord.subjectMarks[sub];
+                                const score = Number(examRecord.subjectMarks[sub] || 0);
+                                const pct = Math.min(100, Math.round((score / maxMarks) * 100));
+                                
+                                let barColor = "bg-red-500";
+                                let textColor = "text-red-600";
+                                if (pct >= 80) {
+                                  barColor = "bg-emerald-500";
+                                  textColor = "text-emerald-600";
+                                } else if (pct >= 50) {
+                                  barColor = "bg-amber-500";
+                                  textColor = "text-amber-600";
+                                }
+
                                 return (
-                                  <div key={sub} className="p-2 bg-white border border-gray-100 rounded-xl text-center shadow-sm">
-                                    <p className="text-[10px] text-gray-500 font-bold">{sub}</p>
-                                    <p className="text-xs font-bold text-[#D4A017] mt-0.5">{score} Marks</p>
+                                  <div key={sub} className="p-3 bg-gray-50/50 border border-gray-100/80 rounded-xl shadow-xs">
+                                    <div className="flex justify-between items-center mb-2">
+                                      <p className="text-[10px] text-gray-500 font-bold tracking-wide uppercase">{sub}</p>
+                                      <p className="text-xs font-extrabold text-gray-800">
+                                        {score} <span className="text-[10px] text-gray-400 font-normal">/ {maxMarks}</span>
+                                      </p>
+                                    </div>
+                                    {/* Progress Bar */}
+                                    <div className="w-full bg-gray-200/60 rounded-full h-1.5 overflow-hidden">
+                                      <div 
+                                        className={`h-full rounded-full transition-all duration-500 ${barColor}`}
+                                        style={{ width: `${pct}%` }}
+                                      />
+                                    </div>
+                                    <p className={`text-[9px] font-bold mt-1 text-right ${textColor}`}>{pct}%</p>
                                   </div>
                                 );
                               })}
                             </div>
-                            <div className="flex justify-between items-center text-[10px] mt-3 pt-2 border-t border-gray-200/50 text-gray-400">
-                              <span>{reportLang === "en" ? `Percentage: ${examRecord.percentage}%` : `ପ୍ରତିଶତ: ${examRecord.percentage}%`}</span>
-                              <span>{reportLang === "en" ? `Remarks: ${examRecord.remarks || "Keep it up"}` : `ମନ୍ତବ୍ୟ: ${examRecord.remarks || "ଚେଷ୍ଟା ଜାରି ରଖିବା"}`}</span>
+
+                            {/* Scorecard Summary Footer */}
+                            <div className="flex justify-between items-center text-[10px] mt-4 pt-3 border-t border-gray-100 text-gray-500 font-medium">
+                              <span className="bg-[#1D2D7A]/5 text-[#1D2D7A] font-bold px-2 py-0.5 rounded-md">
+                                📊 {reportLang === "en" ? `Overall: ${examRecord.percentage}%` : `ସମଗ୍ର: ${examRecord.percentage}%`}
+                              </span>
+                              <span className="italic text-gray-400">
+                                💬 {reportLang === "en" ? `Remarks: ${examRecord.remarks || "Keep it up"}` : `ମନ୍ତବ୍ୟ: ${examRecord.remarks || "ଚେଷ୍ଟା ଜାରି ରଖିବା"}`}
+                              </span>
                             </div>
                           </div>
                         );
