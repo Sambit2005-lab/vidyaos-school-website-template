@@ -2260,7 +2260,24 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
 
                     // Get current month index (1-12) to identify overdue months
                     // (Simulated environment year is 2026, month is July/7)
-                    const currentMonthId = 7; 
+                    const today = new Date();
+                    const currentYear = today.getFullYear();
+                    const currentMonth = today.getMonth() + 1;
+
+                    // Resolve academic year start year (default 2025 based on January 2026 record)
+                    let acadStartYear = 2025;
+                    if (studentFeeRecords.length > 0) {
+                      const latestRec = studentFeeRecords[0];
+                      if (latestRec.month) {
+                        const parts = latestRec.month.split(" ");
+                        if (parts.length === 2) {
+                          const yr = Number(parts[1]);
+                          const mName = parts[0];
+                          const isNewYearMonth = ["January", "February", "March"].includes(mName);
+                          acadStartYear = isNewYearMonth ? yr - 1 : yr;
+                        }
+                      }
+                    }
 
                     // Map status for each academic month
                     let foundFirstUnpaidMonth: any = null;
@@ -2271,8 +2288,9 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                         foundFirstUnpaidMonth = m;
                       }
 
-                      // Check if month is current/past in the academic cycle starting April
-                      const isPastOrCurrent = idx <= academicMonths.findIndex(am => am.id === currentMonthId);
+                      // Check if month is current/past in the calendar year compared to current date
+                      const mYear = (m.id >= 4) ? acadStartYear : acadStartYear + 1;
+                      const isPastOrCurrent = (mYear < currentYear) || (mYear === currentYear && m.id <= currentMonth);
 
                       let status: "PAID" | "OVERDUE" | "UPCOMING" = "UPCOMING";
                       if (isMonthPaid) {
@@ -2281,12 +2299,12 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                         status = "OVERDUE";
                       }
 
-                      return { ...m, tuitionFee, status };
+                      return { ...m, tuitionFee, status, mYear };
                     });
 
                     // Next payment due date is 1st of the first unpaid month
                     const resolvedDueDateStr = foundFirstUnpaidMonth
-                      ? `01-${foundFirstUnpaidMonth.nameEn}-2026`
+                      ? `01-${foundFirstUnpaidMonth.nameEn}-${(foundFirstUnpaidMonth.id >= 4) ? acadStartYear : acadStartYear + 1}`
                       : null;
 
                     const overdueMonthsCount = monthsWithStatus.filter(m => m.status === "OVERDUE").length;
