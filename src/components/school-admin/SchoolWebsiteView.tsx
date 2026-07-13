@@ -2306,10 +2306,36 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                     
                     const sClass = selectedStudentResult.class || "1st";
                     const feeMatch = feeStructure.find((f: any) => f.class === sClass) || { admissionFee: 2000, tuitionFee: 800, transportFee: 500, additionalFee: 200, examFee: 500 };
-                    const tuitionFee = Number(feeMatch.tuitionFee || 0);
+                    let tuitionFee = Number(feeMatch.tuitionFee || 0);
                     const admissionFee = Number(feeMatch.admissionFee || 0);
-                    const transportFee = Number(selectedStudentResult.transportFee || 0);
-                    const examFee = Number(selectedStudentResult.additionalFee || selectedStudentResult.examFee || 0);
+                    let transportFee = Number(selectedStudentResult.transportFee || 0);
+                    let examFee = Number(selectedStudentResult.additionalFee || selectedStudentResult.examFee || 0);
+
+                    // Parse fee items dynamically from student's paid records if available
+                    if (studentFeeRecords.length > 0) {
+                      // Find any record containing particulars
+                      const recordWithFees = studentFeeRecords.find((r: any) => r.particulars && Array.isArray(r.particulars));
+                      if (recordWithFees) {
+                        let extractedTuition = 0;
+                        let extractedTransport = 0;
+                        let extractedAdditional = 0;
+                        recordWithFees.particulars.forEach((p: any) => {
+                          const pName = String(p.name || p.feeName || "").toLowerCase();
+                          const pAmount = Number(p.amount || p.paidAmount || 0);
+                          if (pName.includes("tuition")) {
+                            extractedTuition = pAmount;
+                          } else if (pName.includes("transport")) {
+                            extractedTransport = pAmount;
+                          } else {
+                            extractedAdditional += pAmount;
+                          }
+                        });
+                        if (extractedTuition > 0) tuitionFee = extractedTuition;
+                        if (extractedTransport > 0) transportFee = extractedTransport;
+                        if (extractedAdditional > 0) examFee = extractedAdditional;
+                      }
+                    }
+
                     const monthlyTotal = tuitionFee + transportFee + examFee;
 
                     // Fallback allocation if no explicit records exist in database but paidAmount > 0
