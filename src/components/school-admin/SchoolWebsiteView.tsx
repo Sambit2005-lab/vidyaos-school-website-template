@@ -2290,12 +2290,25 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                       return { ...m, tuitionFee, status, mYear };
                     });
 
-                    // Next payment due date is 1st of the first unpaid month
-                    const resolvedDueDateStr = foundFirstUnpaidMonth
-                      ? `01-${foundFirstUnpaidMonth.nameEn}-${(foundFirstUnpaidMonth.id >= 4) ? acadStartYear : acadStartYear + 1}`
-                      : null;
+                    const overdueMonths = monthsWithStatus.filter(m => m.status === "OVERDUE");
+                    const hasOverdue = overdueMonths.length > 0;
 
-                    const overdueMonthsCount = monthsWithStatus.filter(m => m.status === "OVERDUE").length;
+                    // Next payment due date calculation:
+                    // If overdue months exist: 1st of first unpaid month
+                    // Else: 1st of next upcoming month (August 1st if current month is July/7)
+                    let resolvedDueDateStr = "";
+                    if (hasOverdue && foundFirstUnpaidMonth) {
+                      resolvedDueDateStr = `01-${foundFirstUnpaidMonth.nameEn}-${(foundFirstUnpaidMonth.id >= 4) ? acadStartYear : acadStartYear + 1}`;
+                    } else {
+                      const nextMonthId = (currentMonth % 12) + 1; // 1-12 range
+                      const nextMonthObj = academicMonths.find(m => m.id === nextMonthId);
+                      const nextMonthYear = (nextMonthId >= 4) ? acadStartYear : acadStartYear + 1;
+                      if (nextMonthObj) {
+                        resolvedDueDateStr = `01-${nextMonthObj.nameEn}-${nextMonthYear}`;
+                      }
+                    }
+
+                    const overdueMonthsCount = overdueMonths.length;
                     let totalOverdueDues = overdueMonthsCount * tuitionFee;
                     if (!isAdmissionPaid) totalOverdueDues += admissionFee;
                     if (!isExamPaid) totalOverdueDues += examFee;
@@ -2330,7 +2343,7 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                               <span>₹{totalOverdueDues.toLocaleString()}</span>
                             </div>
                           )}
-                          
+
                           <div className="grid grid-cols-3 gap-2 text-center text-xs pb-1">
                             <div className="bg-white/60 p-2 rounded-xl">
                               <p className="text-[10px] text-gray-400 font-medium">{reportLang === "en" ? "Total Fee" : "ମୋଟ ଫି"}</p>
@@ -2346,10 +2359,10 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                             </div>
                           </div>
 
-                          {resolvedDueDateStr && due > 0 && (
+                          {resolvedDueDateStr && (
                             <div className="mt-3 pt-2 border-t border-gray-200/50 flex justify-between items-center text-[10px] text-gray-500 font-medium">
                               <span>📅 {reportLang === "en" ? "Next Due Date (1st of month):" : "ପରବର୍ତ୍ତୀ ଦେୟ ତାରିଖ (୧ ତାରିଖ):"}</span>
-                              <span className="font-bold text-red-500">{resolvedDueDateStr}</span>
+                              <span className={`font-bold ${hasOverdue ? "text-red-500" : "text-emerald-600"}`}>{resolvedDueDateStr}</span>
                             </div>
                           )}
                         </div>
@@ -2369,37 +2382,34 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                         {/* Monthly Breakdown Grid */}
                         <div>
                           <p className="text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
-                            {reportLang === "en" ? "Month-wise Tuition Fees Breakdown" : "ମାସିକ ଟ୍ୟୁସନ ଫି ବିବରଣୀ"}
+                            {reportLang === "en" ? "Tuition Fees Breakdown" : "ଟ୍ୟୁସନ ଫି ବିବରଣୀ"}
                           </p>
-                          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 text-left">
-                            {monthsWithStatus.map((m) => {
-                              let statusBg = "bg-gray-50 border-gray-100 text-gray-400";
-                              let statusLabel = reportLang === "en" ? "Upcoming" : "ଆସନ୍ତା";
-                              if (m.status === "PAID") {
-                                statusBg = "bg-emerald-50/70 border-emerald-100/60 text-emerald-800";
-                                statusLabel = reportLang === "en" ? "Paid" : "ପରିଶୋଧିତ";
-                              } else if (m.status === "OVERDUE") {
-                                statusBg = "bg-red-50/70 border-red-100/60 text-red-800 font-semibold";
-                                statusLabel = reportLang === "en" ? "OVERDUE" : "ବାକି ଅଛି";
-                              }
-
-                              return (
-                                <div key={m.nameEn} className={`p-2.5 border rounded-xl flex flex-col justify-between ${statusBg}`}>
+                          {hasOverdue ? (
+                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 text-left">
+                              {overdueMonths.map((m) => (
+                                <div key={m.nameEn} className="p-2.5 border border-red-100/60 bg-red-50/70 text-red-800 rounded-xl flex flex-col justify-between">
                                   <div>
                                     <p className="text-xs font-bold text-gray-800">
                                       {reportLang === "en" ? m.nameEn : m.nameOr}
                                     </p>
                                     <p className="text-[10px] text-gray-500 font-medium mt-0.5">₹{m.tuitionFee}</p>
                                   </div>
-                                  <div className="mt-2 pt-1 border-t border-black/5 flex justify-between items-center text-[9px]">
-                                    <span className="font-bold uppercase tracking-wide">{statusLabel}</span>
-                                    {m.status === "PAID" && <span>✓</span>}
-                                    {m.status === "OVERDUE" && <span className="text-red-600 font-extrabold">!</span>}
+                                  <div className="mt-2 pt-1 border-t border-red-200/50 flex justify-between items-center text-[9px] font-bold text-red-600">
+                                    <span>{reportLang === "en" ? "OVERDUE" : "ବାକି ଅଛି"}</span>
+                                    <span>!</span>
                                   </div>
                                 </div>
-                              );
-                            })}
-                          </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="p-4 bg-emerald-50 border border-emerald-100 text-emerald-800 rounded-2xl text-center shadow-sm">
+                              <p className="text-xs font-bold">✓ {reportLang === "en" ? "All dues cleared up to date!" : "ସମସ୍ତ ଦେୟ ପରିଶୋଧିତ!"}</p>
+                              <p className="text-[9px] text-emerald-700/80 mt-1">
+                                {reportLang === "en" ? "No outstanding dues found. Next billing cycles on: " : "କୌଣସି ବକେୟା ଦେୟ ନାହିଁ। ପରବର୍ତ୍ତୀ ଦେୟ ତାରିଖ: "}
+                                <span className="font-bold">{resolvedDueDateStr}</span>
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
