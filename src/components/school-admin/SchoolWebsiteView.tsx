@@ -2264,20 +2264,8 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                     const currentYear = today.getFullYear();
                     const currentMonth = today.getMonth() + 1;
 
-                    // Resolve academic year start year (default 2025 based on January 2026 record)
-                    let acadStartYear = 2025;
-                    if (studentFeeRecords.length > 0) {
-                      const latestRec = studentFeeRecords[0];
-                      if (latestRec.month) {
-                        const parts = latestRec.month.split(" ");
-                        if (parts.length === 2) {
-                          const yr = Number(parts[1]);
-                          const mName = parts[0];
-                          const isNewYearMonth = ["January", "February", "March"].includes(mName);
-                          acadStartYear = isNewYearMonth ? yr - 1 : yr;
-                        }
-                      }
-                    }
+                    // Resolve academic year start year dynamically based on current date
+                    const acadStartYear = (currentMonth >= 4) ? currentYear : currentYear - 1;
 
                     // Map status for each academic month
                     let foundFirstUnpaidMonth: any = null;
