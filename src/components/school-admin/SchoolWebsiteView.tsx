@@ -570,21 +570,24 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
 
   useEffect(() => {
     const feeStructure = (liveSchoolData as any)?.feeStructure || [
-      { class: "1st", admissionFee: 2000, tuitionFee: 800, examFee: 500 },
-      { class: "2nd", admissionFee: 2000, tuitionFee: 800, examFee: 500 },
-      { class: "3rd", admissionFee: 2000, tuitionFee: 900, examFee: 500 },
-      { class: "4th", admissionFee: 2200, tuitionFee: 900, examFee: 600 },
-      { class: "5th", admissionFee: 2200, tuitionFee: 1000, examFee: 600 },
-      { class: "6th", admissionFee: 2500, tuitionFee: 1100, examFee: 700 },
-      { class: "7th", admissionFee: 2500, tuitionFee: 1200, examFee: 700 },
-      { class: "8th", admissionFee: 3000, tuitionFee: 1300, examFee: 800 },
-      { class: "9th", admissionFee: 3000, tuitionFee: 1400, examFee: 800 },
-      { class: "10th", admissionFee: 3500, tuitionFee: 1500, examFee: 1000 },
+      { class: "1st", admissionFee: 2000, tuitionFee: 800, transportFee: 500, additionalFee: 200, examFee: 500 },
+      { class: "2nd", admissionFee: 2000, tuitionFee: 800, transportFee: 500, additionalFee: 200, examFee: 500 },
+      { class: "3rd", admissionFee: 2000, tuitionFee: 900, transportFee: 500, additionalFee: 200, examFee: 500 },
+      { class: "4th", admissionFee: 2200, tuitionFee: 900, transportFee: 600, additionalFee: 300, examFee: 600 },
+      { class: "5th", admissionFee: 2200, tuitionFee: 1000, transportFee: 600, additionalFee: 300, examFee: 600 },
+      { class: "6th", admissionFee: 2500, tuitionFee: 1100, transportFee: 700, additionalFee: 400, examFee: 700 },
+      { class: "7th", admissionFee: 2500, tuitionFee: 1200, transportFee: 700, additionalFee: 400, examFee: 700 },
+      { class: "8th", admissionFee: 3000, tuitionFee: 1300, transportFee: 800, additionalFee: 500, examFee: 800 },
+      { class: "9th", admissionFee: 3000, tuitionFee: 1400, transportFee: 800, additionalFee: 500, examFee: 800 },
+      { class: "10th", admissionFee: 3500, tuitionFee: 1500, transportFee: 1000, additionalFee: 600, examFee: 1000 },
     ];
     const match = feeStructure.find((f: any) => f.class === payClass);
     if (match) {
-      const tuitionFee = match.tuitionFee || 800;
-      setPayAmount(tuitionFee * (paySelectedMonths.length || 1));
+      const tuition = Number(match.tuitionFee || 0);
+      const transport = Number(match.transportFee || 0);
+      const additional = Number(match.additionalFee || 0);
+      const monthlyTotal = tuition + transport + additional;
+      setPayAmount(monthlyTotal * (paySelectedMonths.length || 1));
     }
   }, [payClass, paySelectedMonths, liveSchoolData]);
 
@@ -2008,6 +2011,37 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                       <div>
                         <label className="block text-xs font-semibold text-gray-600 mb-1">Amount (₹) *</label>
                         <input required type="number" placeholder="1000" className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none bg-gray-50 font-semibold" value={payAmount} onChange={e => setPayAmount(Number(e.target.value))} />
+                        
+                        {/* Dynamic Fee Breakdown helper under input */}
+                        {(() => {
+                          const feeStructure = (liveSchoolData as any)?.feeStructure || [
+                            { class: "1st", admissionFee: 2000, tuitionFee: 800, transportFee: 500, additionalFee: 200, examFee: 500 },
+                            { class: "2nd", admissionFee: 2000, tuitionFee: 800, transportFee: 500, additionalFee: 200, examFee: 500 },
+                            { class: "3rd", admissionFee: 2000, tuitionFee: 900, transportFee: 500, additionalFee: 200, examFee: 500 },
+                            { class: "4th", admissionFee: 2200, tuitionFee: 900, transportFee: 600, additionalFee: 300, examFee: 600 },
+                            { class: "5th", admissionFee: 2200, tuitionFee: 1000, transportFee: 600, additionalFee: 300, examFee: 600 },
+                            { class: "6th", admissionFee: 2500, tuitionFee: 1100, transportFee: 700, additionalFee: 400, examFee: 700 },
+                            { class: "7th", admissionFee: 2500, tuitionFee: 1200, transportFee: 700, additionalFee: 400, examFee: 700 },
+                            { class: "8th", admissionFee: 3000, tuitionFee: 1300, transportFee: 800, additionalFee: 500, examFee: 800 },
+                            { class: "9th", admissionFee: 3000, tuitionFee: 1400, transportFee: 800, additionalFee: 500, examFee: 800 },
+                            { class: "10th", admissionFee: 3500, tuitionFee: 1500, transportFee: 1000, additionalFee: 600, examFee: 1000 },
+                          ];
+                          const match = feeStructure.find((f: any) => f.class === payClass);
+                          if (!match) return null;
+                          const t = Number(match.tuitionFee || 0);
+                          const tr = Number(match.transportFee || 0);
+                          const ad = Number(match.additionalFee || 0);
+                          const monthsCount = paySelectedMonths.length || 1;
+                          return (
+                            <div className="mt-1 text-[9px] text-gray-500 font-medium space-x-1.5 flex items-center bg-gray-50 p-1.5 rounded-lg border border-gray-200/50">
+                              <span className="font-bold text-gray-700">Breakdown:</span>
+                              <span>Tuition: ₹{t}</span>
+                              {tr > 0 && <span>• Transport: ₹{tr}</span>}
+                              {ad > 0 && <span>• Addl: ₹{ad}</span>}
+                              <span>(× {monthsCount} month{monthsCount > 1 ? "s" : ""})</span>
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
 
