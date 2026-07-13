@@ -2289,6 +2289,13 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                       ? `01-${foundFirstUnpaidMonth.nameEn}-2026`
                       : null;
 
+                    const overdueMonthsCount = monthsWithStatus.filter(m => m.status === "OVERDUE").length;
+                    let totalOverdueDues = overdueMonthsCount * tuitionFee;
+                    if (!isAdmissionPaid) totalOverdueDues += admissionFee;
+                    if (!isExamPaid) totalOverdueDues += examFee;
+
+                    const billingDateStr = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+
                     return (
                       <div className="space-y-4">
                         {/* Summary Header */}
@@ -2304,6 +2311,19 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                               }
                             </span>
                           </div>
+
+                          {/* Billing Statement Date */}
+                          <div className="flex justify-between text-[10px] text-gray-500 font-medium mb-2">
+                            <span>{reportLang === "en" ? "Billing Statement Date:" : "ବିଲ୍ ଷ୍ଟେଟମେଣ୍ଟ ତାରିଖ:"}</span>
+                            <span className="font-bold text-gray-700">{billingDateStr}</span>
+                          </div>
+
+                          {overdueMonthsCount > 0 && (
+                            <div className="mb-3 p-2.5 bg-red-100/50 border border-red-200 text-red-800 rounded-xl text-[10px] font-bold flex justify-between items-center">
+                              <span>⚠️ {reportLang === "en" ? `${overdueMonthsCount} Months Overdue:` : `${overdueMonthsCount} ମାସର ବାକି:`}</span>
+                              <span>₹{totalOverdueDues.toLocaleString()}</span>
+                            </div>
+                          )}
                           
                           <div className="grid grid-cols-3 gap-2 text-center text-xs pb-1">
                             <div className="bg-white/60 p-2 rounded-xl">
