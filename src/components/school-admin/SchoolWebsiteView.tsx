@@ -14,7 +14,7 @@ import {
 } from "recharts";
 import { useApp } from "../../lib/AppContext";
 import { fetchSchoolConfig, subscribeNotices, addAdmission } from "../../lib/firestoreService";
-import { useStudents, useMarksRecords, useExams } from "../../lib/useData";
+import { useStudents, useMarksRecords, useExams, useFeeRecords } from "../../lib/useData";
 import { useDynamicSEO } from "../../lib/useDynamicSEO";
 import { cn } from "../../lib/cn";
 import logoImg from "../../assets/Image 08-06-26 at 22.47.jpg";
@@ -369,6 +369,7 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
   const { demoMode, tenantId } = useApp();
   const students = useStudents();
   const exams = useExams();
+  const feeRecords = useFeeRecords();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [visible, setVisible] = useState<Set<string>>(new Set());
@@ -2197,6 +2198,30 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                       { nameEn: "March", nameOr: "ମାର୍ଚ୍ଚ", id: 3 }
                     ];
 
+                    // Filter student paid fee records from database
+                    const studentFeeRecords = feeRecords.filter((r: any) => 
+                      String(r.studentId) === String(selectedStudentResult.id) &&
+                      String(r.status).toLowerCase() === "paid"
+                    );
+
+                    const paidMonthNames = new Set(
+                      studentFeeRecords.map((r: any) => {
+                        return r.month ? r.month.split(" ")[0].trim() : "";
+                      })
+                    );
+
+                    // Find latest paid month index in academic cycle
+                    const monthOrder = [
+                      "April", "May", "June", "July", "August", "September", "October", "November", "December", "January", "February", "March"
+                    ];
+
+                    let maxPaidIndex = -1;
+                    monthOrder.forEach((mName, index) => {
+                      if (paidMonthNames.has(mName)) {
+                        maxPaidIndex = Math.max(maxPaidIndex, index);
+                      }
+                    });
+
                     // Resolve monthly fee matching student class
                     const feeStructure = (liveSchoolData as any)?.feeStructure || [
                       { class: "1st", admissionFee: 2000, tuitionFee: 800, examFee: 500 },
@@ -2217,13 +2242,21 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                     const admissionFee = feeMatch.admissionFee || 2000;
                     const examFee = feeMatch.examFee || 500;
 
-                    // Allocate paidAmount to fees
-                    let remainingPaid = paid;
-                    const isAdmissionPaid = remainingPaid >= admissionFee;
-                    if (isAdmissionPaid) remainingPaid -= admissionFee;
+                    // Fallback allocation if no explicit records exist in database but paidAmount > 0
+                    if (maxPaidIndex === -1 && paid > 0) {
+                      let tempPaid = paid;
+                      if (tempPaid >= admissionFee) tempPaid -= admissionFee;
+                      if (tempPaid >= examFee) tempPaid -= examFee;
+                      monthOrder.forEach((mName, index) => {
+                        if (tempPaid >= tuitionFee) {
+                          maxPaidIndex = index;
+                          tempPaid -= tuitionFee;
+                        }
+                      });
+                    }
 
-                    const isExamPaid = remainingPaid >= examFee;
-                    if (isExamPaid) remainingPaid -= examFee;
+                    const isAdmissionPaid = paid >= admissionFee || maxPaidIndex >= 0;
+                    const isExamPaid = paid >= (admissionFee + examFee) || maxPaidIndex >= 0;
 
                     // Get current month index (1-12) to identify overdue months
                     // (Simulated environment year is 2026, month is July/7)
@@ -2232,8 +2265,7 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                     // Map status for each academic month
                     let foundFirstUnpaidMonth: any = null;
                     const monthsWithStatus = academicMonths.map((m, idx) => {
-                      const isMonthPaid = remainingPaid >= tuitionFee;
-                      if (isMonthPaid) remainingPaid -= tuitionFee;
+                      const isMonthPaid = idx <= maxPaidIndex;
 
                       if (!isMonthPaid && !foundFirstUnpaidMonth) {
                         foundFirstUnpaidMonth = m;
