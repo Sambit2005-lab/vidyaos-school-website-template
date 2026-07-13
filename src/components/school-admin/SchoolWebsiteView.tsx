@@ -2292,23 +2292,25 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
 
                     // Resolve monthly fee matching student class
                     const feeStructure = (liveSchoolData as any)?.feeStructure || [
-                      { class: "1st", admissionFee: 2000, tuitionFee: 800, examFee: 500 },
-                      { class: "2nd", admissionFee: 2000, tuitionFee: 800, examFee: 500 },
-                      { class: "3rd", admissionFee: 2000, tuitionFee: 900, examFee: 500 },
-                      { class: "4th", admissionFee: 2200, tuitionFee: 900, examFee: 600 },
-                      { class: "5th", admissionFee: 2200, tuitionFee: 1000, examFee: 600 },
-                      { class: "6th", admissionFee: 2500, tuitionFee: 1100, examFee: 700 },
-                      { class: "7th", admissionFee: 2500, tuitionFee: 1200, examFee: 700 },
-                      { class: "8th", admissionFee: 3000, tuitionFee: 1300, examFee: 800 },
-                      { class: "9th", admissionFee: 3000, tuitionFee: 1400, examFee: 800 },
-                      { class: "10th", admissionFee: 3500, tuitionFee: 1500, examFee: 1000 },
+                      { class: "1st", admissionFee: 2000, tuitionFee: 800, transportFee: 500, additionalFee: 200, examFee: 500 },
+                      { class: "2nd", admissionFee: 2000, tuitionFee: 800, transportFee: 500, additionalFee: 200, examFee: 500 },
+                      { class: "3rd", admissionFee: 2000, tuitionFee: 900, transportFee: 500, additionalFee: 200, examFee: 500 },
+                      { class: "4th", admissionFee: 2200, tuitionFee: 900, transportFee: 600, additionalFee: 300, examFee: 600 },
+                      { class: "5th", admissionFee: 2200, tuitionFee: 1000, transportFee: 600, additionalFee: 300, examFee: 600 },
+                      { class: "6th", admissionFee: 2500, tuitionFee: 1100, transportFee: 700, additionalFee: 400, examFee: 700 },
+                      { class: "7th", admissionFee: 2500, tuitionFee: 1200, transportFee: 700, additionalFee: 400, examFee: 700 },
+                      { class: "8th", admissionFee: 3000, tuitionFee: 1300, transportFee: 800, additionalFee: 500, examFee: 800 },
+                      { class: "9th", admissionFee: 3000, tuitionFee: 1400, transportFee: 800, additionalFee: 500, examFee: 800 },
+                      { class: "10th", admissionFee: 3500, tuitionFee: 1500, transportFee: 1000, additionalFee: 600, examFee: 1000 },
                     ];
                     
                     const sClass = selectedStudentResult.class || "1st";
-                    const feeMatch = feeStructure.find((f: any) => f.class === sClass) || { admissionFee: 2000, tuitionFee: 800, examFee: 500 };
-                    const tuitionFee = feeMatch.tuitionFee || 800;
-                    const admissionFee = feeMatch.admissionFee || 2000;
-                    const examFee = feeMatch.examFee || 500;
+                    const feeMatch = feeStructure.find((f: any) => f.class === sClass) || { admissionFee: 2000, tuitionFee: 800, transportFee: 500, additionalFee: 200, examFee: 500 };
+                    const tuitionFee = Number(feeMatch.tuitionFee || 0);
+                    const admissionFee = Number(feeMatch.admissionFee || 0);
+                    const transportFee = Number(feeMatch.transportFee || 0);
+                    const examFee = Number(feeMatch.additionalFee || feeMatch.examFee || 0);
+                    const monthlyTotal = tuitionFee + transportFee + examFee;
 
                     // Fallback allocation if no explicit records exist in database but paidAmount > 0
                     if (maxPaidIndex === -1 && paid > 0) {
@@ -2316,9 +2318,9 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                       if (tempPaid >= admissionFee) tempPaid -= admissionFee;
                       if (tempPaid >= examFee) tempPaid -= examFee;
                       monthOrder.forEach((mName, index) => {
-                        if (tempPaid >= tuitionFee) {
+                        if (tempPaid >= monthlyTotal) {
                           maxPaidIndex = index;
-                          tempPaid -= tuitionFee;
+                          tempPaid -= monthlyTotal;
                         }
                       });
                     }
@@ -2355,7 +2357,7 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                         status = "OVERDUE";
                       }
 
-                      return { ...m, tuitionFee, status, mYear };
+                      return { ...m, tuitionFee, transportFee, additionalFee: examFee, monthlyTotal, status, mYear };
                     });
 
                     const overdueMonths = monthsWithStatus.filter(m => m.status === "OVERDUE");
@@ -2368,7 +2370,7 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                     const resolvedDueDateStr = `01-${nextMonthName}-${nextMonthYear}`;
 
                     const overdueMonthsCount = overdueMonths.length;
-                    let totalOverdueDues = overdueMonthsCount * tuitionFee;
+                    let totalOverdueDues = overdueMonthsCount * monthlyTotal;
                     if (!isAdmissionPaid) totalOverdueDues += admissionFee;
                     if (!isExamPaid) totalOverdueDues += examFee;
 
@@ -2438,21 +2440,42 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                         {/* Monthly Breakdown Grid */}
                         <div>
                           <p className="text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
-                            {reportLang === "en" ? "Tuition Fees Breakdown" : "ଟ୍ୟୁସନ ଫି ବିବରଣୀ"}
+                            {reportLang === "en" ? "Monthly Fees Breakdown" : "ମାସିକ ଦେୟ ବିବରଣୀ"}
                           </p>
                           {hasOverdue ? (
-                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 text-left">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-left">
                               {overdueMonths.map((m) => (
-                                <div key={m.nameEn} className="p-2.5 border border-red-100/60 bg-red-50/70 text-red-800 rounded-xl flex flex-col justify-between">
+                                <div key={m.nameEn} className="p-3 border border-red-100 bg-red-50/50 text-red-900 rounded-2xl flex flex-col justify-between shadow-xs">
                                   <div>
-                                    <p className="text-xs font-bold text-gray-800">
-                                      {reportLang === "en" ? m.nameEn : m.nameOr}
-                                    </p>
-                                    <p className="text-[10px] text-gray-500 font-medium mt-0.5">₹{m.tuitionFee}</p>
-                                  </div>
-                                  <div className="mt-2 pt-1 border-t border-red-200/50 flex justify-between items-center text-[9px] font-bold text-red-600">
-                                    <span>{reportLang === "en" ? "OVERDUE!" : "ବାକି ଅଛି!"}</span>
-                                    <span>!</span>
+                                    <div className="flex justify-between items-center mb-1">
+                                      <p className="text-xs font-bold text-gray-800">
+                                        {reportLang === "en" ? m.nameEn : m.nameOr}
+                                      </p>
+                                      <span className="text-[8px] bg-red-500 text-white font-bold px-1.5 py-0.5 rounded-md uppercase">
+                                        {reportLang === "en" ? "Overdue" : "ବାକି"}
+                                      </span>
+                                    </div>
+                                    <p className="text-sm font-black text-red-600">₹{(m.monthlyTotal || 0).toLocaleString()}</p>
+                                    
+                                    {/* Breakdown Items List */}
+                                    <div className="mt-2 pt-2 border-t border-red-100 text-[9px] text-gray-500 space-y-0.5 font-medium">
+                                      <div className="flex justify-between">
+                                        <span>Tuition (ଟ୍ୟୁସନ):</span>
+                                        <span className="font-semibold text-gray-700">₹{(m.tuitionFee || 0).toLocaleString()}</span>
+                                      </div>
+                                      {m.transportFee > 0 && (
+                                        <div className="flex justify-between">
+                                          <span>Transport (ପରିବହନ):</span>
+                                          <span className="font-semibold text-gray-700">₹{(m.transportFee || 0).toLocaleString()}</span>
+                                        </div>
+                                      )}
+                                      {m.additionalFee > 0 && (
+                                        <div className="flex justify-between">
+                                          <span>Additional (ଅତିରିକ୍ତ):</span>
+                                          <span className="font-semibold text-gray-700">₹{(m.additionalFee || 0).toLocaleString()}</span>
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
                               ))}
