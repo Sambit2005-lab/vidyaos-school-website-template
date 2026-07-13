@@ -2390,11 +2390,21 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                         <div className="grid grid-cols-2 gap-2 text-[10px]">
                           <div className={`p-2.5 rounded-xl border flex justify-between items-center ${isAdmissionPaid ? "bg-emerald-50/50 border-emerald-100/50 text-emerald-800" : "bg-red-50/50 border-red-100/50 text-red-800"}`}>
                             <span>🏫 {reportLang === "en" ? "Admission Fee" : "ନାମଲେଖା ଫି"} (₹{admissionFee})</span>
-                            <span className="font-bold">{isAdmissionPaid ? "✓ PAID" : "✗ DUE"}</span>
+                            <span className="font-bold">
+                              {isAdmissionPaid 
+                                ? (reportLang === "en" ? "✓ PAID" : "✓ ପରିଶୋଧିତ") 
+                                : (reportLang === "en" ? "✗ DUE" : "✗ ବାକି ଅଛି")
+                              }
+                            </span>
                           </div>
                           <div className={`p-2.5 rounded-xl border flex justify-between items-center ${isExamPaid ? "bg-emerald-50/50 border-emerald-100/50 text-emerald-800" : "bg-red-50/50 border-red-100/50 text-red-800"}`}>
                             <span>📝 {reportLang === "en" ? "Exam Fee" : "ପରୀକ୍ଷା ଫି"} (₹{examFee})</span>
-                            <span className="font-bold">{isExamPaid ? "✓ PAID" : "✗ DUE"}</span>
+                            <span className="font-bold">
+                              {isExamPaid 
+                                ? (reportLang === "en" ? "✓ PAID" : "✓ ପରିଶୋଧିତ") 
+                                : (reportLang === "en" ? "✗ DUE" : "✗ ବାକି ଅଛି")
+                              }
+                            </span>
                           </div>
                         </div>
 
@@ -2414,7 +2424,7 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                                     <p className="text-[10px] text-gray-500 font-medium mt-0.5">₹{m.tuitionFee}</p>
                                   </div>
                                   <div className="mt-2 pt-1 border-t border-red-200/50 flex justify-between items-center text-[9px] font-bold text-red-600">
-                                    <span>{reportLang === "en" ? "OVERDUE" : "ବାକି ଅଛି"}</span>
+                                    <span>{reportLang === "en" ? "OVERDUE!" : "ବାକି ଅଛି!"}</span>
                                     <span>!</span>
                                   </div>
                                 </div>
