@@ -2308,8 +2308,8 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                     const feeMatch = feeStructure.find((f: any) => f.class === sClass) || { admissionFee: 2000, tuitionFee: 800, transportFee: 500, additionalFee: 200, examFee: 500 };
                     const tuitionFee = Number(feeMatch.tuitionFee || 0);
                     const admissionFee = Number(feeMatch.admissionFee || 0);
-                    const transportFee = Number(feeMatch.transportFee || 0);
-                    const examFee = Number(feeMatch.additionalFee || feeMatch.examFee || 0);
+                    const transportFee = Number(selectedStudentResult.transportFee || 0);
+                    const examFee = Number(selectedStudentResult.additionalFee || selectedStudentResult.examFee || 0);
                     const monthlyTotal = tuitionFee + transportFee + examFee;
 
                     // Fallback allocation if no explicit records exist in database but paidAmount > 0
