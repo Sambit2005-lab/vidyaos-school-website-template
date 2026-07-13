@@ -460,6 +460,56 @@ export async function updateSchoolConfig(tenantId: string, schoolId: string, dat
   return setDoc(getSchoolDocRef(tenantId, schoolId), data, { merge: true });
 }
 
+export async function syncSchoolFeesToClasses(tenantId: string, schoolId: string, feeStructure: any[]) {
+  if (!feeStructure || !Array.isArray(feeStructure)) return;
+  const classesRef = collection(db, tenantPath(tenantId), "classes");
+  const q = query(classesRef, where("schoolId", "in", [Number(schoolId), String(schoolId)]));
+  const snap = await getDocs(q);
+  for (const classDoc of snap.docs) {
+    const classData = classDoc.data();
+    const className = classData.name;
+    const match = feeStructure.find((f: any) => f.class === className);
+    if (match) {
+      const currentFees = classData.feeStructure || {};
+      await updateDoc(classDoc.ref, {
+        feeStructure: {
+          ...currentFees,
+          tuitionFee: Number(match.tuitionFee || 0),
+          transportFee: Number(match.transportFee || 0)
+        }
+      });
+    }
+  }
+}
+
+export async function syncClassFeeToSchoolConfig(tenantId: string, schoolId: string, className: string, tuitionFee: number, transportFee: number) {
+  const schoolRef = getSchoolDocRef(tenantId, schoolId);
+  const snap = await getDoc(schoolRef);
+  if (snap.exists()) {
+    const schoolData = snap.data();
+    let feeStructure = schoolData.feeStructure || [];
+    if (!Array.isArray(feeStructure)) feeStructure = [];
+    
+    const idx = feeStructure.findIndex((f: any) => f.class === className);
+    if (idx >= 0) {
+      feeStructure[idx] = {
+        ...feeStructure[idx],
+        tuitionFee: Number(tuitionFee),
+        transportFee: Number(transportFee)
+      };
+    } else {
+      feeStructure.push({
+        class: className,
+        admissionFee: 2000,
+        tuitionFee: Number(tuitionFee),
+        transportFee: Number(transportFee),
+        examFee: 500
+      });
+    }
+    await updateDoc(schoolRef, { feeStructure });
+  }
+}
+
 // ─── Tenant Info ───
 
 export async function fetchTenant(tenantId: string) {

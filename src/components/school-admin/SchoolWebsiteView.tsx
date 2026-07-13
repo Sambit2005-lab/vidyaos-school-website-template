@@ -1911,27 +1911,29 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                       <th className="px-3 py-2.5">Class</th>
                       <th className="px-3 py-2.5">Admission Fee</th>
                       <th className="px-3 py-2.5">Tuition Fee (Monthly)</th>
-                      <th className="px-3 py-2.5">Exam Fee</th>
+                      <th className="px-3 py-2.5">Transport Fee</th>
+                      <th className="px-3 py-2.5">Additional / Exam Fee</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {((liveSchoolData as any)?.feeStructure || [
-                      { class: "1st", admissionFee: 2000, tuitionFee: 800, examFee: 500 },
-                      { class: "2nd", admissionFee: 2000, tuitionFee: 800, examFee: 500 },
-                      { class: "3rd", admissionFee: 2000, tuitionFee: 900, examFee: 500 },
-                      { class: "4th", admissionFee: 2200, tuitionFee: 900, examFee: 600 },
-                      { class: "5th", admissionFee: 2200, tuitionFee: 1000, examFee: 600 },
-                      { class: "6th", admissionFee: 2500, tuitionFee: 1100, examFee: 700 },
-                      { class: "7th", admissionFee: 2500, tuitionFee: 1200, examFee: 700 },
-                      { class: "8th", admissionFee: 3000, tuitionFee: 1300, examFee: 800 },
-                      { class: "9th", admissionFee: 3000, tuitionFee: 1400, examFee: 800 },
-                      { class: "10th", admissionFee: 3500, tuitionFee: 1500, examFee: 1000 },
+                      { class: "1st", admissionFee: 2000, tuitionFee: 800, transportFee: 500, additionalFee: 200, examFee: 500 },
+                      { class: "2nd", admissionFee: 2000, tuitionFee: 800, transportFee: 500, additionalFee: 200, examFee: 500 },
+                      { class: "3rd", admissionFee: 2000, tuitionFee: 900, transportFee: 500, additionalFee: 200, examFee: 500 },
+                      { class: "4th", admissionFee: 2200, tuitionFee: 900, transportFee: 600, additionalFee: 300, examFee: 600 },
+                      { class: "5th", admissionFee: 2200, tuitionFee: 1000, transportFee: 600, additionalFee: 300, examFee: 600 },
+                      { class: "6th", admissionFee: 2500, tuitionFee: 1100, transportFee: 700, additionalFee: 400, examFee: 700 },
+                      { class: "7th", admissionFee: 2500, tuitionFee: 1200, transportFee: 700, additionalFee: 400, examFee: 700 },
+                      { class: "8th", admissionFee: 3000, tuitionFee: 1300, transportFee: 800, additionalFee: 500, examFee: 800 },
+                      { class: "9th", admissionFee: 3000, tuitionFee: 1400, transportFee: 800, additionalFee: 500, examFee: 800 },
+                      { class: "10th", admissionFee: 3500, tuitionFee: 1500, transportFee: 1000, additionalFee: 600, examFee: 1000 },
                     ]).filter((fee: any) => ((liveSchoolData as any)?.activeClasses || ["1st","2nd","3rd","4th","5th","6th","7th","8th","9th","10th"]).includes(fee.class)).map((fee: any, idx: number) => (
                       <tr key={idx} className="hover:bg-gray-50/50">
                         <td className="px-3 py-2.5 font-semibold text-gray-800">{fee.class}</td>
-                        <td className="px-3 py-2.5">₹{fee.admissionFee.toLocaleString()}</td>
-                        <td className="px-3 py-2.5">₹{fee.tuitionFee.toLocaleString()}</td>
-                        <td className="px-3 py-2.5">₹{fee.examFee.toLocaleString()}</td>
+                        <td className="px-3 py-2.5">₹{(fee.admissionFee || 0).toLocaleString()}</td>
+                        <td className="px-3 py-2.5">₹{(fee.tuitionFee || 0).toLocaleString()}</td>
+                        <td className="px-3 py-2.5">₹{(fee.transportFee || 0).toLocaleString()}</td>
+                        <td className="px-3 py-2.5">₹{(fee.additionalFee || fee.examFee || 0).toLocaleString()}</td>
                       </tr>
                     ))}
                   </tbody>
