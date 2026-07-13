@@ -288,12 +288,11 @@ const galleryPhotos = [
 const navLinks = [
   { en: "Home", or: "ମୂଳପୃଷ୍ଠା", id: "home" },
   { en: "About Us", or: "ଆମ ବିଷୟରେ", id: "about" },
-  { en: "Achievements", or: "ସଫଳତା", id: "achievements" },
-  { en: "Academics", or: "ଶିକ୍ଷା", id: "academics" },
-  { en: "Facilities", or: "ସୁବିଧା", id: "facilities" },
-  { en: "Gallery", or: "ଗ୍ୟାଲେରୀ", id: "gallery" },
+  { en: "Admission Open", or: "ନାମଲେଖା", id: "admission-page" },
+  { en: "Fee Structure", or: "ଫି ବିବରଣୀ", id: "fee-structure-page" },
+  { en: "Report Card", or: "ପ୍ରଗତି ପତ୍ର", id: "report-card-page" },
   { en: "Notices", or: "ସୂଚନା", id: "notices" },
-  { en: "Admissions", or: "ଭର୍ତ୍ତି", id: "admissions" },
+  { en: "Gallery", or: "ଗ୍ୟାଲେରୀ", id: "gallery" },
   { en: "Contact", or: "ଯୋଗାଯୋଗ", id: "contact" },
 ];
 
@@ -375,6 +374,7 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
   const [visible, setVisible] = useState<Set<string>>(new Set());
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [liveSchoolData, setLiveSchoolData] = useState<Record<string, unknown> | null>(null);
+  const [currentView, setCurrentView] = useState<"home" | "admission-page" | "fee-structure-page" | "report-card-page">("home");
 
   // Online Admission Form states
   const [admStep, setAdmStep] = useState(1);
@@ -885,31 +885,11 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
         </button>
       )}
 
-      {/* ===== TOP HEADER ===== */}
-      <div className="bg-[#1D2D7A] text-white relative z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-3">
-              <img src={activeLogo} alt="Logo" className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-cover border border-white/20 bg-white" />
-              <div className="hidden sm:block">
-                <p className="text-xs text-blue-200" style={{ fontFamily: "'Noto Sans Oriya', sans-serif" }}>{school.sansthanOr}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 sm:gap-5 text-xs">
-              <span className="hidden md:flex items-center gap-1.5 text-blue-200"><Phone size={12} className="text-[#D4A017]" /> {school.phone}</span>
-              <span className="hidden md:flex items-center gap-1.5 text-blue-200"><Mail size={12} className="text-[#D4A017]" /> {school.email}</span>
-              <button onClick={() => scrollTo("admissions")} className="bg-[#D4A017] text-[#1D2D7A] px-3 sm:px-4 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold hover:bg-[#C49B16] transition-all">{O.admissionOpen.en}</button>
-              <button className="border border-white/30 text-white px-3 sm:px-4 py-1.5 rounded-lg text-[11px] sm:text-xs font-medium hover:bg-white/10 transition-all hidden sm:flex items-center gap-1"><Phone size={10} /> {O.contactUs.en}</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* ===== NAVBAR ===== */}
       <header className={`sticky top-0 z-50 transition-all duration-500 ${scrolled ? "bg-white/95 backdrop-blur-xl shadow-lg shadow-blue-900/10" : "bg-white/90 backdrop-blur-md"}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-[72px]">
-            <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+            <div className="flex items-center gap-3 cursor-pointer group" onClick={() => { setCurrentView("home"); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
               <img src={activeLogo} alt="Logo" className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl object-cover shadow-lg group-hover:scale-105 transition-all bg-white" />
               <div>
                 <h1 className="text-sm sm:text-lg font-bold text-[#1D2D7A] leading-tight">{school.name.en}</h1>
@@ -918,9 +898,28 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
             </div>
             <nav className="hidden lg:flex items-center gap-0.5">
               {navLinks.map((l) => (
-                <button key={l.id} onClick={() => scrollTo(l.id)} className="px-3 xl:px-3.5 py-2 font-medium text-[#1D2D7A]/70 hover:text-[#1D2D7A] hover:bg-blue-50/50 rounded-xl transition-all"><NavT en={l.en} or={l.or} /></button>
+                <button 
+                  key={l.id} 
+                  onClick={() => {
+                    if (["admission-page", "fee-structure-page", "report-card-page"].includes(l.id)) {
+                      setCurrentView(l.id as any);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    } else {
+                      setCurrentView("home");
+                      setTimeout(() => scrollTo(l.id), 100);
+                    }
+                  }} 
+                  className={`px-3 xl:px-3.5 py-2 font-medium rounded-xl transition-all ${((l.id === "home" && currentView === "home") || l.id === currentView) ? "text-[#1D2D7A] bg-blue-50 font-bold" : "text-[#1D2D7A]/70 hover:text-[#1D2D7A] hover:bg-blue-50/50"}`}
+                >
+                  <NavT en={l.en} or={l.or} />
+                </button>
               ))}
-              <button onClick={() => scrollTo("admissions")} className="ml-2 bg-[#D4A017] text-[#1D2D7A] px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-[#C49B16] shadow-lg shadow-[#D4A017]/30 transition-all flex items-center gap-1">{O.admissionOpen.en} <ChevronRight size={14} /></button>
+              <button 
+                onClick={() => { setCurrentView("admission-page"); window.scrollTo({ top: 0, behavior: "smooth" }); }} 
+                className="ml-2 bg-[#D4A017] text-[#1D2D7A] px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-[#C49B16] shadow-lg shadow-[#D4A017]/30 transition-all flex items-center gap-1"
+              >
+                {O.admissionOpen.en} <ChevronRight size={14} />
+              </button>
             </nav>
             <button onClick={() => setMenuOpen(!menuOpen)} className="lg:hidden w-10 h-10 rounded-xl flex items-center justify-center hover:bg-blue-50 text-[#1D2D7A]">{menuOpen ? <X size={22} /> : <Menu size={22} />}</button>
           </div>
@@ -928,15 +927,37 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
         {menuOpen && (
           <div className="lg:hidden border-t border-blue-100 bg-white/95 backdrop-blur-xl px-4 py-3 space-y-1 shadow-xl max-h-[80vh] overflow-y-auto">
             {navLinks.map((l) => (
-              <button key={l.id} onClick={() => scrollTo(l.id)} className="block w-full text-left px-4 py-2.5 text-sm font-medium text-[#1D2D7A]/70 hover:text-[#1D2D7A] hover:bg-blue-50 rounded-xl"><T en={l.en} or={l.or} /></button>
+              <button 
+                key={l.id} 
+                onClick={() => {
+                  setMenuOpen(false);
+                  if (["admission-page", "fee-structure-page", "report-card-page"].includes(l.id)) {
+                    setCurrentView(l.id as any);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  } else {
+                    setCurrentView("home");
+                    setTimeout(() => scrollTo(l.id), 100);
+                  }
+                }} 
+                className={`block w-full text-left px-4 py-2.5 text-sm font-medium rounded-xl ${((l.id === "home" && currentView === "home") || l.id === currentView) ? "text-[#1D2D7A] bg-blue-50 font-bold" : "text-[#1D2D7A]/70 hover:text-[#1D2D7A] hover:bg-blue-50"}`}
+              >
+                <T en={l.en} or={l.or} />
+              </button>
             ))}
-            <button onClick={() => scrollTo("admissions")} className="w-full bg-[#D4A017] text-[#1D2D7A] px-4 py-3 rounded-xl text-sm font-bold mt-2"><T en={O.admissionOpen.en} or={O.admissionOpen.or} /></button>
+            <button 
+              onClick={() => { setMenuOpen(false); setCurrentView("admission-page"); window.scrollTo({ top: 0, behavior: "smooth" }); }} 
+              className="w-full bg-[#D4A017] text-[#1D2D7A] px-4 py-3 rounded-xl text-sm font-bold mt-2"
+            >
+              <T en={O.admissionOpen.en} or={O.admissionOpen.or} />
+            </button>
           </div>
         )}
       </header>
 
-      {/* ===== HERO ===== */}
-      <section id="home" className="relative min-h-[90vh] flex items-center overflow-hidden bg-[#1D2D7A]">
+      {currentView === "home" && (
+        <>
+          {/* ===== HERO ===== */}
+          <section id="home" className="relative min-h-[90vh] flex items-center overflow-hidden bg-[#1D2D7A]">
         <div 
           className="absolute inset-0 bg-gradient-to-br from-[#1D2D7A] via-[#1D2D7A]/95 to-[#15205E]" 
           style={school.bannerUrl ? { backgroundImage: `linear-gradient(rgba(29, 45, 122, 0.8), rgba(21, 32, 94, 0.85)), url(${school.bannerUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
@@ -1474,9 +1495,11 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
           </div>
         </div>
       </section>
+        </>
+      )}
 
-      {/* ===== ADMISSIONS ===== */}
-      <section id="admissions" data-observe="admissions" className="relative py-6 sm:py-8 overflow-hidden">
+      {(currentView === "home" || currentView === "admission-page") && (
+        <section id="admissions" data-observe="admissions" className="relative py-6 sm:py-8 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#1D2D7A] via-[#1D2D7A]/95 to-[#15205E]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(212,160,23,0.08)_0%,transparent_50%)]" />
         <div className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-[#D4A017]/10 rounded-full blur-3xl" />
@@ -1857,8 +1880,9 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
           </div>
         </div>
       </section>
+      )}
 
-      {/* ===== FEE STRUCTURE & PAYMENTS ===== */}
+      {(currentView === "home" || currentView === "fee-structure-page") && (
       <section id="fees" className="py-12 sm:py-16 bg-gray-50 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
@@ -2024,8 +2048,9 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
           </div>
         </div>
       </section>
+      )}
 
-      {/* ===== PARENT STUDENT PORTAL ===== */}
+      {(currentView === "home" || currentView === "report-card-page") && (
       <section id="parentPortal" className="py-12 sm:py-16 bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
@@ -2462,8 +2487,9 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
           </div>
         </div>
       </section>
+      )}
 
-      {/* ===== CONTACT ===== */}
+      {currentView === "home" && (
       <section id="contact" data-observe="contact" className="py-6 sm:py-8 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
@@ -2517,6 +2543,7 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
           </div>
         </div>
       </section>
+      )}
 
       {/* ===== FOOTER ===== */}
       <footer className="bg-[#1D2D7A] text-white relative overflow-hidden">
@@ -2539,7 +2566,21 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
               <h4 className="font-bold text-[#D4A017] mb-4 text-sm tracking-wider uppercase"><T en={O.quickLinks.en} or={O.quickLinks.or} /></h4>
               <div className="space-y-2.5 text-sm">
                 {navLinks.map((l) => (
-                  <button key={l.id} onClick={() => scrollTo(l.id)} className="block text-blue-200/70 hover:text-[#D4A017] hover:translate-x-1 transition-all text-left w-full"><T en={l.en} or={l.or} /></button>
+                  <button 
+                    key={l.id} 
+                    onClick={() => {
+                      if (["admission-page", "fee-structure-page", "report-card-page"].includes(l.id)) {
+                        setCurrentView(l.id as any);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      } else {
+                        setCurrentView("home");
+                        setTimeout(() => scrollTo(l.id), 100);
+                      }
+                    }} 
+                    className="block text-blue-200/70 hover:text-[#D4A017] hover:translate-x-1 transition-all text-left w-full"
+                  >
+                    <T en={l.en} or={l.or} />
+                  </button>
                 ))}
               </div>
             </div>
