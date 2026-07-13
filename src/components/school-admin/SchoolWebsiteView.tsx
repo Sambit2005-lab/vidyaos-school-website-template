@@ -2182,8 +2182,11 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                     const due = annual - paid;
                     const isPaid = due <= 0;
 
-                    // Academic months list starting from April
+                    // Academic months list starting from January
                     const academicMonths = [
+                      { nameEn: "January", nameOr: "ଜାନୁୟାରୀ", id: 1 },
+                      { nameEn: "February", nameOr: "ଫେବୃୟାରୀ", id: 2 },
+                      { nameEn: "March", nameOr: "ମାର୍ଚ୍ଚ", id: 3 },
                       { nameEn: "April", nameOr: "ଅପ୍ରେଲ୍", id: 4 },
                       { nameEn: "May", nameOr: "ମେ", id: 5 },
                       { nameEn: "June", nameOr: "ଜୁନ୍", id: 6 },
@@ -2192,10 +2195,7 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                       { nameEn: "September", nameOr: "ସେପ୍ଟେମ୍ବର", id: 9 },
                       { nameEn: "October", nameOr: "ଅକ୍ଟୋବର", id: 10 },
                       { nameEn: "November", nameOr: "ନଭେମ୍ବର", id: 11 },
-                      { nameEn: "December", nameOr: "ଡିସେମ୍ବର", id: 12 },
-                      { nameEn: "January", nameOr: "ଜାନୁୟାରୀ", id: 1 },
-                      { nameEn: "February", nameOr: "ଫେବୃୟାରୀ", id: 2 },
-                      { nameEn: "March", nameOr: "ମାର୍ଚ୍ଚ", id: 3 }
+                      { nameEn: "December", nameOr: "ଡିସେମ୍ବର", id: 12 }
                     ];
 
                     // Filter student paid fee records from database
@@ -2210,9 +2210,9 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                       })
                     );
 
-                    // Find latest paid month index in academic cycle
+                    // Find latest paid month index in academic cycle (January to December)
                     const monthOrder = [
-                      "April", "May", "June", "July", "August", "September", "October", "November", "December", "January", "February", "March"
+                      "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
                     ];
 
                     let maxPaidIndex = -1;
@@ -2264,8 +2264,8 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                     const currentYear = today.getFullYear();
                     const currentMonth = today.getMonth() + 1;
 
-                    // Resolve academic year start year dynamically based on current date
-                    const acadStartYear = (currentMonth >= 4) ? currentYear : currentYear - 1;
+                    // Resolve academic year start year dynamically based on current date (January to December cycle)
+                    const acadStartYear = currentYear;
 
                     // Map status for each academic month
                     let foundFirstUnpaidMonth: any = null;
@@ -2277,8 +2277,8 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                       }
 
                       // Check if month is current/past in the calendar year compared to current date
-                      const mYear = (m.id >= 4) ? acadStartYear : acadStartYear + 1;
-                      const isPastOrCurrent = (mYear < currentYear) || (mYear === currentYear && m.id <= currentMonth);
+                      const mYear = acadStartYear;
+                      const isPastOrCurrent = m.id <= currentMonth;
 
                       let status: "PAID" | "OVERDUE" | "UPCOMING" = "UPCOMING";
                       if (isMonthPaid) {
@@ -2298,11 +2298,11 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                     // Else: 1st of next upcoming month (August 1st if current month is July/7)
                     let resolvedDueDateStr = "";
                     if (hasOverdue && foundFirstUnpaidMonth) {
-                      resolvedDueDateStr = `01-${foundFirstUnpaidMonth.nameEn}-${(foundFirstUnpaidMonth.id >= 4) ? acadStartYear : acadStartYear + 1}`;
+                      resolvedDueDateStr = `01-${foundFirstUnpaidMonth.nameEn}-${acadStartYear}`;
                     } else {
                       const nextMonthId = (currentMonth % 12) + 1; // 1-12 range
                       const nextMonthObj = academicMonths.find(m => m.id === nextMonthId);
-                      const nextMonthYear = (nextMonthId >= 4) ? acadStartYear : acadStartYear + 1;
+                      const nextMonthYear = (nextMonthId === 1) ? acadStartYear + 1 : acadStartYear;
                       if (nextMonthObj) {
                         resolvedDueDateStr = `01-${nextMonthObj.nameEn}-${nextMonthYear}`;
                       }
@@ -2344,20 +2344,7 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                             </div>
                           )}
 
-                          <div className="grid grid-cols-3 gap-2 text-center text-xs pb-1">
-                            <div className="bg-white/60 p-2 rounded-xl">
-                              <p className="text-[10px] text-gray-400 font-medium">{reportLang === "en" ? "Total Fee" : "ମୋଟ ଫି"}</p>
-                              <p className="font-bold text-gray-800 mt-0.5">₹{annual.toLocaleString()}</p>
-                            </div>
-                            <div className="bg-white/60 p-2 rounded-xl">
-                              <p className="text-[10px] text-gray-400 font-medium">{reportLang === "en" ? "Paid" : "ପରିଶୋଧିତ"}</p>
-                              <p className="font-bold text-emerald-600 mt-0.5">₹{paid.toLocaleString()}</p>
-                            </div>
-                            <div className="bg-white/60 p-2 rounded-xl">
-                              <p className="text-[10px] text-gray-400 font-medium">{reportLang === "en" ? "Remaining" : "ବାକି ଫି"}</p>
-                              <p className={`font-bold mt-0.5 ${due > 0 ? "text-red-500" : "text-gray-800"}`}>₹{due.toLocaleString()}</p>
-                            </div>
-                          </div>
+
 
                           {resolvedDueDateStr && (
                             <div className="mt-3 pt-2 border-t border-gray-200/50 flex justify-between items-center text-[10px] text-gray-500 font-medium">
