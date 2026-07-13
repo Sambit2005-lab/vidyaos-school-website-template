@@ -2313,8 +2313,8 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
 
                     // Parse fee items dynamically from student's paid records if available
                     if (studentFeeRecords.length > 0) {
-                      // Find any record containing particulars
-                      const recordWithFees = studentFeeRecords.find((r: any) => r.particulars && Array.isArray(r.particulars));
+                      // Find the latest record containing particulars
+                      const recordWithFees = [...studentFeeRecords].reverse().find((r: any) => r.particulars && Array.isArray(r.particulars));
                       if (recordWithFees) {
                         let extractedTuition = 0;
                         let extractedTransport = 0;
