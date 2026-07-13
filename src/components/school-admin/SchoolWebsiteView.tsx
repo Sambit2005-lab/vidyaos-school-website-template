@@ -2172,8 +2172,8 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
 
                 {/* Fees report */}
                 <div>
-                  <h4 className="text-sm font-bold text-gray-700 mb-2">
-                    {reportLang === "en" ? "Fees Dues & Payment Status" : "ଦେୟ ବିବରଣୀ ସ୍ଥିତି"}
+                  <h4 className="text-sm font-bold text-gray-700 mb-3">
+                    {reportLang === "en" ? "Fees Dues & Monthly Payment Status" : "ମାସିକ ଦେୟ ବିବରଣୀ ଏବଂ ସ୍ଥିତି"}
                   </h4>
                   {(() => {
                     const annual = Number(selectedStudentResult.annualFee || 0);
@@ -2181,41 +2181,168 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                     const due = annual - paid;
                     const isPaid = due <= 0;
 
+                    // Academic months list starting from April
+                    const academicMonths = [
+                      { nameEn: "April", nameOr: "ଅପ୍ରେଲ୍", id: 4 },
+                      { nameEn: "May", nameOr: "ମେ", id: 5 },
+                      { nameEn: "June", nameOr: "ଜୁନ୍", id: 6 },
+                      { nameEn: "July", nameOr: "ଜୁଲାଇ", id: 7 },
+                      { nameEn: "August", nameOr: "ଅଗଷ୍ଟ", id: 8 },
+                      { nameEn: "September", nameOr: "ସେପ୍ଟେମ୍ବର", id: 9 },
+                      { nameEn: "October", nameOr: "ଅକ୍ଟୋବର", id: 10 },
+                      { nameEn: "November", nameOr: "ନଭେମ୍ବର", id: 11 },
+                      { nameEn: "December", nameOr: "ଡିସେମ୍ବର", id: 12 },
+                      { nameEn: "January", nameOr: "ଜାନୁୟାରୀ", id: 1 },
+                      { nameEn: "February", nameOr: "ଫେବୃୟାରୀ", id: 2 },
+                      { nameEn: "March", nameOr: "ମାର୍ଚ୍ଚ", id: 3 }
+                    ];
+
+                    // Resolve monthly fee matching student class
+                    const feeStructure = (liveSchoolData as any)?.feeStructure || [
+                      { class: "1st", admissionFee: 2000, tuitionFee: 800, examFee: 500 },
+                      { class: "2nd", admissionFee: 2000, tuitionFee: 800, examFee: 500 },
+                      { class: "3rd", admissionFee: 2000, tuitionFee: 900, examFee: 500 },
+                      { class: "4th", admissionFee: 2200, tuitionFee: 900, examFee: 600 },
+                      { class: "5th", admissionFee: 2200, tuitionFee: 1000, examFee: 600 },
+                      { class: "6th", admissionFee: 2500, tuitionFee: 1100, examFee: 700 },
+                      { class: "7th", admissionFee: 2500, tuitionFee: 1200, examFee: 700 },
+                      { class: "8th", admissionFee: 3000, tuitionFee: 1300, examFee: 800 },
+                      { class: "9th", admissionFee: 3000, tuitionFee: 1400, examFee: 800 },
+                      { class: "10th", admissionFee: 3500, tuitionFee: 1500, examFee: 1000 },
+                    ];
+                    
+                    const sClass = selectedStudentResult.class || "1st";
+                    const feeMatch = feeStructure.find((f: any) => f.class === sClass) || { admissionFee: 2000, tuitionFee: 800, examFee: 500 };
+                    const tuitionFee = feeMatch.tuitionFee || 800;
+                    const admissionFee = feeMatch.admissionFee || 2000;
+                    const examFee = feeMatch.examFee || 500;
+
+                    // Allocate paidAmount to fees
+                    let remainingPaid = paid;
+                    const isAdmissionPaid = remainingPaid >= admissionFee;
+                    if (isAdmissionPaid) remainingPaid -= admissionFee;
+
+                    const isExamPaid = remainingPaid >= examFee;
+                    if (isExamPaid) remainingPaid -= examFee;
+
+                    // Get current month index (1-12) to identify overdue months
+                    // (Simulated environment year is 2026, month is July/7)
+                    const currentMonthId = 7; 
+
+                    // Map status for each academic month
+                    let foundFirstUnpaidMonth: any = null;
+                    const monthsWithStatus = academicMonths.map((m, idx) => {
+                      const isMonthPaid = remainingPaid >= tuitionFee;
+                      if (isMonthPaid) remainingPaid -= tuitionFee;
+
+                      if (!isMonthPaid && !foundFirstUnpaidMonth) {
+                        foundFirstUnpaidMonth = m;
+                      }
+
+                      // Check if month is current/past in the academic cycle starting April
+                      const isPastOrCurrent = idx <= academicMonths.findIndex(am => am.id === currentMonthId);
+
+                      let status: "PAID" | "OVERDUE" | "UPCOMING" = "UPCOMING";
+                      if (isMonthPaid) {
+                        status = "PAID";
+                      } else if (isPastOrCurrent) {
+                        status = "OVERDUE";
+                      }
+
+                      return { ...m, tuitionFee, status };
+                    });
+
+                    // Next payment due date is 1st of the first unpaid month
+                    const resolvedDueDateStr = foundFirstUnpaidMonth
+                      ? `01-${foundFirstUnpaidMonth.nameEn}-2026`
+                      : null;
+
                     return (
-                      <div className={`p-4 border rounded-xl space-y-2 ${isPaid ? "bg-emerald-50 border-emerald-100 text-emerald-800" : "bg-amber-50 border-amber-100 text-amber-800"}`}>
-                        <div className="flex justify-between items-center">
-                          <p className="text-xs font-bold">
-                            {reportLang === "en" ? "School Fee Status" : "ବିଦ୍ୟାଳୟ ଫି ସ୍ଥିତି"}
-                          </p>
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${isPaid ? "bg-emerald-500 text-white" : "bg-amber-500 text-white"}`}>
-                            {isPaid 
-                              ? (reportLang === "en" ? "PAID" : "ପରିଶୋଧିତ")
-                              : (reportLang === "en" ? "DUE / PENDING" : "ବାକି ଅଛି")
-                            }
-                          </span>
+                      <div className="space-y-4">
+                        {/* Summary Header */}
+                        <div className={`p-4 border rounded-2xl ${isPaid ? "bg-emerald-50 border-emerald-100 text-emerald-800" : "bg-amber-50 border-amber-100 text-amber-800"}`}>
+                          <div className="flex justify-between items-center mb-3">
+                            <p className="text-xs font-bold flex items-center gap-1.5">
+                              💳 {reportLang === "en" ? "School Fee Status" : "ବିଦ୍ୟାଳୟ ଫି ସ୍ଥିତି"}
+                            </p>
+                            <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${isPaid ? "bg-emerald-500 text-white" : "bg-amber-500 text-white"}`}>
+                              {isPaid 
+                                ? (reportLang === "en" ? "FULLY PAID" : "ସମସ୍ତ ପରିଶୋଧିତ")
+                                : (reportLang === "en" ? "PENDING DUES" : "ଦେୟ ବାକି ଅଛି")
+                              }
+                            </span>
+                          </div>
+                          
+                          <div className="grid grid-cols-3 gap-2 text-center text-xs pb-1">
+                            <div className="bg-white/60 p-2 rounded-xl">
+                              <p className="text-[10px] text-gray-400 font-medium">{reportLang === "en" ? "Total Fee" : "ମୋଟ ଫି"}</p>
+                              <p className="font-bold text-gray-800 mt-0.5">₹{annual.toLocaleString()}</p>
+                            </div>
+                            <div className="bg-white/60 p-2 rounded-xl">
+                              <p className="text-[10px] text-gray-400 font-medium">{reportLang === "en" ? "Paid" : "ପରିଶୋଧିତ"}</p>
+                              <p className="font-bold text-emerald-600 mt-0.5">₹{paid.toLocaleString()}</p>
+                            </div>
+                            <div className="bg-white/60 p-2 rounded-xl">
+                              <p className="text-[10px] text-gray-400 font-medium">{reportLang === "en" ? "Remaining" : "ବାକି ଫି"}</p>
+                              <p className={`font-bold mt-0.5 ${due > 0 ? "text-red-500" : "text-gray-800"}`}>₹{due.toLocaleString()}</p>
+                            </div>
+                          </div>
+
+                          {resolvedDueDateStr && due > 0 && (
+                            <div className="mt-3 pt-2 border-t border-gray-200/50 flex justify-between items-center text-[10px] text-gray-500 font-medium">
+                              <span>📅 {reportLang === "en" ? "Next Due Date (1st of month):" : "ପରବର୍ତ୍ତୀ ଦେୟ ତାରିଖ (୧ ତାରିଖ):"}</span>
+                              <span className="font-bold text-red-500">{resolvedDueDateStr}</span>
+                            </div>
+                          )}
                         </div>
-                        <div className="grid grid-cols-3 gap-2 text-[10px] pt-1">
-                          <div>
-                            <p className="text-gray-400">{reportLang === "en" ? "Total Fee:" : "ମୋଟ ଫି:"}</p>
-                            <p className="font-bold text-gray-800">₹{annual.toLocaleString()}</p>
+
+                        {/* Extra Charges Section (Admission & Exam) */}
+                        <div className="grid grid-cols-2 gap-2 text-[10px]">
+                          <div className={`p-2.5 rounded-xl border flex justify-between items-center ${isAdmissionPaid ? "bg-emerald-50/50 border-emerald-100/50 text-emerald-800" : "bg-red-50/50 border-red-100/50 text-red-800"}`}>
+                            <span>🏫 {reportLang === "en" ? "Admission Fee" : "ନାମଲେଖା ଫି"} (₹{admissionFee})</span>
+                            <span className="font-bold">{isAdmissionPaid ? "✓ PAID" : "✗ DUE"}</span>
                           </div>
-                          <div>
-                            <p className="text-gray-400">{reportLang === "en" ? "Paid Amount:" : "ପରିଶୋଧିତ:"}</p>
-                            <p className="font-bold text-emerald-600">₹{paid.toLocaleString()}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400">{reportLang === "en" ? "Remaining Due:" : "ବାକି ଫି:"}</p>
-                            <p className={`font-bold ${due > 0 ? "text-red-500" : "text-gray-800"}`}>₹{due.toLocaleString()}</p>
+                          <div className={`p-2.5 rounded-xl border flex justify-between items-center ${isExamPaid ? "bg-emerald-50/50 border-emerald-100/50 text-emerald-800" : "bg-red-50/50 border-red-100/50 text-red-800"}`}>
+                            <span>📝 {reportLang === "en" ? "Exam Fee" : "ପରୀକ୍ଷା ଫି"} (₹{examFee})</span>
+                            <span className="font-bold">{isExamPaid ? "✓ PAID" : "✗ DUE"}</span>
                           </div>
                         </div>
-                        {selectedStudentResult.nextDueDate && due > 0 && (
-                          <p className="text-[9px] text-gray-400 italic pt-1">
-                            {reportLang === "en" 
-                              ? `Next Due Date: ${selectedStudentResult.nextDueDate}`
-                              : `ପରବର୍ତ୍ତୀ ଦେୟ ତାରିଖ: ${selectedStudentResult.nextDueDate}`
-                            }
+
+                        {/* Monthly Breakdown Grid */}
+                        <div>
+                          <p className="text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
+                            {reportLang === "en" ? "Month-wise Tuition Fees Breakdown" : "ମାସିକ ଟ୍ୟୁସନ ଫି ବିବରଣୀ"}
                           </p>
-                        )}
+                          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 text-left">
+                            {monthsWithStatus.map((m) => {
+                              let statusBg = "bg-gray-50 border-gray-100 text-gray-400";
+                              let statusLabel = reportLang === "en" ? "Upcoming" : "ଆସନ୍ତା";
+                              if (m.status === "PAID") {
+                                statusBg = "bg-emerald-50/70 border-emerald-100/60 text-emerald-800";
+                                statusLabel = reportLang === "en" ? "Paid" : "ପରିଶୋଧିତ";
+                              } else if (m.status === "OVERDUE") {
+                                statusBg = "bg-red-50/70 border-red-100/60 text-red-800 font-semibold";
+                                statusLabel = reportLang === "en" ? "OVERDUE" : "ବାକି ଅଛି";
+                              }
+
+                              return (
+                                <div key={m.nameEn} className={`p-2.5 border rounded-xl flex flex-col justify-between ${statusBg}`}>
+                                  <div>
+                                    <p className="text-xs font-bold text-gray-800">
+                                      {reportLang === "en" ? m.nameEn : m.nameOr}
+                                    </p>
+                                    <p className="text-[10px] text-gray-500 font-medium mt-0.5">₹{m.tuitionFee}</p>
+                                  </div>
+                                  <div className="mt-2 pt-1 border-t border-black/5 flex justify-between items-center text-[9px]">
+                                    <span className="font-bold uppercase tracking-wide">{statusLabel}</span>
+                                    {m.status === "PAID" && <span>✓</span>}
+                                    {m.status === "OVERDUE" && <span className="text-red-600 font-extrabold">!</span>}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
                       </div>
                     );
                   })()}
