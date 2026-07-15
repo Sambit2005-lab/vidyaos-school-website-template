@@ -474,15 +474,18 @@ export async function syncSchoolFeesToClasses(tenantId: string, schoolId: string
       await updateDoc(classDoc.ref, {
         feeStructure: {
           ...currentFees,
+          admissionFee: Number(match.admissionFee || 0),
           tuitionFee: Number(match.tuitionFee || 0),
-          transportFee: Number(match.transportFee || 0)
+          transportFee: Number(match.transportFee || 0),
+          examFee: Number(match.examFee || 0),
+          additionalFee: Number(match.additionalFee || 0)
         }
       });
     }
   }
 }
 
-export async function syncClassFeeToSchoolConfig(tenantId: string, schoolId: string, className: string, tuitionFee: number, transportFee: number) {
+export async function syncClassFeeToSchoolConfig(tenantId: string, schoolId: string, className: string, admissionFee: number, tuitionFee: number, transportFee: number, examFee: number, additionalFee: number) {
   const schoolRef = getSchoolDocRef(tenantId, schoolId);
   const snap = await getDoc(schoolRef);
   if (snap.exists()) {
@@ -494,16 +497,20 @@ export async function syncClassFeeToSchoolConfig(tenantId: string, schoolId: str
     if (idx >= 0) {
       feeStructure[idx] = {
         ...feeStructure[idx],
+        admissionFee: Number(admissionFee),
         tuitionFee: Number(tuitionFee),
-        transportFee: Number(transportFee)
+        transportFee: Number(transportFee),
+        examFee: Number(examFee),
+        additionalFee: Number(additionalFee)
       };
     } else {
       feeStructure.push({
         class: className,
-        admissionFee: 2000,
+        admissionFee: Number(admissionFee),
         tuitionFee: Number(tuitionFee),
         transportFee: Number(transportFee),
-        examFee: 500
+        examFee: Number(examFee),
+        additionalFee: Number(additionalFee)
       });
     }
     await updateDoc(schoolRef, { feeStructure });

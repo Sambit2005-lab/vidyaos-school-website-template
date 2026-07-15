@@ -585,25 +585,26 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
   };
 
   useEffect(() => {
-    const feeStructure = (liveSchoolData as any)?.feeStructure || [];
-    // Resolve fee parameters by checking classes collection first, falling back to schools config
+    const schoolStructure = (liveSchoolData as any)?.feeStructure || [];
+    const schoolMatch = schoolStructure.find((f: any) => f.class === payClass);
     const classMatch = liveClassesData.find((c: any) => c.name === payClass);
-    if (classMatch && classMatch.feeStructure) {
-      const tuition = Number(classMatch.feeStructure.tuitionFee || 0);
-      const transport = Number(classMatch.feeStructure.transportFee || 0);
-      const additional = Number(classMatch.feeStructure.additionalFee || 0);
-      const monthlyTotal = tuition + transport + additional;
-      setPayAmount(monthlyTotal * (paySelectedMonths.length || 1));
-    } else {
-      const match = feeStructure.find((f: any) => f.class === payClass);
-      if (match) {
-        const tuition = Number(match.tuitionFee || 0);
-        const transport = Number(match.transportFee || 0);
-        const additional = Number(match.additionalFee || 0);
-        const monthlyTotal = tuition + transport + additional;
-        setPayAmount(monthlyTotal * (paySelectedMonths.length || 1));
+    let tuition = 0, transport = 0, additional = 0;
+    if (schoolMatch) {
+      tuition = Number(schoolMatch.tuitionFee || 0);
+      transport = Number(schoolMatch.transportFee || 0);
+      additional = Number(schoolMatch.additionalFee || 0);
+      if (classMatch && classMatch.feeStructure) {
+        tuition = Number(classMatch.feeStructure.tuitionFee ?? tuition);
+        transport = Number(classMatch.feeStructure.transportFee ?? transport);
+        additional = Number(classMatch.feeStructure.additionalFee ?? additional);
       }
+    } else if (classMatch && classMatch.feeStructure) {
+      tuition = Number(classMatch.feeStructure.tuitionFee || 0);
+      transport = Number(classMatch.feeStructure.transportFee || 0);
+      additional = Number(classMatch.feeStructure.additionalFee || 0);
     }
+    const monthlyTotal = tuition + transport + additional;
+    setPayAmount(monthlyTotal * (paySelectedMonths.length || 1));
   }, [payClass, paySelectedMonths, liveSchoolData, liveClassesData]);
 
   const handleParentSearch = (e: React.FormEvent) => {
@@ -1948,24 +1949,29 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {((liveSchoolData as any)?.activeClasses || ["1st","2nd","3rd","4th","5th","6th","7th","8th","9th","10th"]).map((cName: string) => {
+                      const schoolStructure = (liveSchoolData as any)?.feeStructure || [];
+                      const schoolMatch = schoolStructure.find((f: any) => f.class === cName);
                       const classMatch = liveClassesData.find((c: any) => c.name === cName);
                       let admissionFee = 0, tuitionFee = 0, transportFee = 0, additionalFee = 0, examFee = 0;
-                      if (classMatch && classMatch.feeStructure) {
-                        admissionFee = Number(classMatch.feeStructure.admissionFee || 2000);
+                      if (schoolMatch) {
+                        admissionFee = Number(schoolMatch.admissionFee || 0);
+                        tuitionFee = Number(schoolMatch.tuitionFee || 0);
+                        transportFee = Number(schoolMatch.transportFee || 0);
+                        additionalFee = Number(schoolMatch.additionalFee || 0);
+                        examFee = Number(schoolMatch.examFee || 0);
+                        if (classMatch && classMatch.feeStructure) {
+                          admissionFee = Number(classMatch.feeStructure.admissionFee ?? admissionFee);
+                          tuitionFee = Number(classMatch.feeStructure.tuitionFee ?? tuitionFee);
+                          transportFee = Number(classMatch.feeStructure.transportFee ?? transportFee);
+                          additionalFee = Number(classMatch.feeStructure.additionalFee ?? additionalFee);
+                          examFee = Number(classMatch.feeStructure.examFee ?? examFee);
+                        }
+                      } else if (classMatch && classMatch.feeStructure) {
+                        admissionFee = Number(classMatch.feeStructure.admissionFee || 0);
                         tuitionFee = Number(classMatch.feeStructure.tuitionFee || 0);
                         transportFee = Number(classMatch.feeStructure.transportFee || 0);
-                        examFee = Number(classMatch.feeStructure.examFee || 0);
                         additionalFee = Number(classMatch.feeStructure.additionalFee || 0);
-                      } else {
-                        const schoolStructure = (liveSchoolData as any)?.feeStructure || [];
-                        const match = schoolStructure.find((f: any) => f.class === cName);
-                        if (match) {
-                          admissionFee = Number(match.admissionFee || 0);
-                          tuitionFee = Number(match.tuitionFee || 0);
-                          transportFee = Number(match.transportFee || 0);
-                          additionalFee = Number(match.additionalFee || 0);
-                          examFee = Number(match.examFee || 0);
-                        }
+                        examFee = Number(classMatch.feeStructure.examFee || 0);
                       }
 
                       return (
@@ -2053,19 +2059,22 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                         
                         {(() => {
                           let t = 0, tr = 0, ad = 0;
+                          const schoolStructure = (liveSchoolData as any)?.feeStructure || [];
+                          const schoolMatch = schoolStructure.find((f: any) => f.class === payClass);
                           const classMatch = liveClassesData.find((c: any) => c.name === payClass);
-                          if (classMatch && classMatch.feeStructure) {
+                          if (schoolMatch) {
+                            t = Number(schoolMatch.tuitionFee || 0);
+                            tr = Number(schoolMatch.transportFee || 0);
+                            ad = Number(schoolMatch.additionalFee || 0);
+                            if (classMatch && classMatch.feeStructure) {
+                              t = Number(classMatch.feeStructure.tuitionFee ?? t);
+                              tr = Number(classMatch.feeStructure.transportFee ?? tr);
+                              ad = Number(classMatch.feeStructure.additionalFee ?? ad);
+                            }
+                          } else if (classMatch && classMatch.feeStructure) {
                             t = Number(classMatch.feeStructure.tuitionFee || 0);
                             tr = Number(classMatch.feeStructure.transportFee || 0);
                             ad = Number(classMatch.feeStructure.additionalFee || 0);
-                          } else {
-                            const feeStructure = (liveSchoolData as any)?.feeStructure || [];
-                            const match = feeStructure.find((f: any) => f.class === payClass);
-                            if (match) {
-                              t = Number(match.tuitionFee || 0);
-                              tr = Number(match.transportFee || 0);
-                              ad = Number(match.additionalFee || 0);
-                            }
                           }
                           const monthsCount = paySelectedMonths.length || 1;
                           return (
