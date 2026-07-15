@@ -585,18 +585,7 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
   };
 
   useEffect(() => {
-    const feeStructure = (liveSchoolData as any)?.feeStructure || [
-      { class: "1st", admissionFee: 2000, tuitionFee: 800, transportFee: 500, additionalFee: 200, examFee: 500 },
-      { class: "2nd", admissionFee: 2000, tuitionFee: 800, transportFee: 500, additionalFee: 200, examFee: 500 },
-      { class: "3rd", admissionFee: 2000, tuitionFee: 900, transportFee: 500, additionalFee: 200, examFee: 500 },
-      { class: "4th", admissionFee: 2200, tuitionFee: 900, transportFee: 600, additionalFee: 300, examFee: 600 },
-      { class: "5th", admissionFee: 2200, tuitionFee: 1000, transportFee: 600, additionalFee: 300, examFee: 600 },
-      { class: "6th", admissionFee: 2500, tuitionFee: 1100, transportFee: 700, additionalFee: 400, examFee: 700 },
-      { class: "7th", admissionFee: 2500, tuitionFee: 1200, transportFee: 700, additionalFee: 400, examFee: 700 },
-      { class: "8th", admissionFee: 3000, tuitionFee: 1300, transportFee: 800, additionalFee: 500, examFee: 800 },
-      { class: "9th", admissionFee: 3000, tuitionFee: 1400, transportFee: 800, additionalFee: 500, examFee: 800 },
-      { class: "10th", admissionFee: 3500, tuitionFee: 1500, transportFee: 1000, additionalFee: 600, examFee: 1000 },
-    ];
+    const feeStructure = (liveSchoolData as any)?.feeStructure || [];
     // Resolve fee parameters by checking classes collection first, falling back to schools config
     const classMatch = liveClassesData.find((c: any) => c.name === payClass);
     if (classMatch && classMatch.feeStructure) {
@@ -1968,18 +1957,7 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                         examFee = Number(classMatch.feeStructure.examFee || 0);
                         additionalFee = Number(classMatch.feeStructure.additionalFee || 0);
                       } else {
-                        const schoolStructure = (liveSchoolData as any)?.feeStructure || [
-                          { class: "1st", admissionFee: 2000, tuitionFee: 800, transportFee: 500, additionalFee: 200, examFee: 500 },
-                          { class: "2nd", admissionFee: 2000, tuitionFee: 800, transportFee: 500, additionalFee: 200, examFee: 500 },
-                          { class: "3rd", admissionFee: 2000, tuitionFee: 900, transportFee: 500, additionalFee: 200, examFee: 500 },
-                          { class: "4th", admissionFee: 2200, tuitionFee: 900, transportFee: 600, additionalFee: 300, examFee: 600 },
-                          { class: "5th", admissionFee: 2200, tuitionFee: 1000, transportFee: 600, additionalFee: 300, examFee: 600 },
-                          { class: "6th", admissionFee: 2500, tuitionFee: 1100, transportFee: 700, additionalFee: 400, examFee: 700 },
-                          { class: "7th", admissionFee: 2500, tuitionFee: 1200, transportFee: 700, additionalFee: 400, examFee: 700 },
-                          { class: "8th", admissionFee: 3000, tuitionFee: 1300, transportFee: 800, additionalFee: 500, examFee: 800 },
-                          { class: "9th", admissionFee: 3000, tuitionFee: 1400, transportFee: 800, additionalFee: 500, examFee: 800 },
-                          { class: "10th", admissionFee: 3500, tuitionFee: 1500, transportFee: 1000, additionalFee: 600, examFee: 1000 },
-                        ];
+                        const schoolStructure = (liveSchoolData as any)?.feeStructure || [];
                         const match = schoolStructure.find((f: any) => f.class === cName);
                         if (match) {
                           admissionFee = Number(match.admissionFee || 0);
@@ -2081,18 +2059,7 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                             tr = Number(classMatch.feeStructure.transportFee || 0);
                             ad = Number(classMatch.feeStructure.additionalFee || 0);
                           } else {
-                            const feeStructure = (liveSchoolData as any)?.feeStructure || [
-                              { class: "1st", admissionFee: 2000, tuitionFee: 800, transportFee: 500, additionalFee: 200, examFee: 500 },
-                              { class: "2nd", admissionFee: 2000, tuitionFee: 800, transportFee: 500, additionalFee: 200, examFee: 500 },
-                              { class: "3rd", admissionFee: 2000, tuitionFee: 900, transportFee: 500, additionalFee: 200, examFee: 500 },
-                              { class: "4th", admissionFee: 2200, tuitionFee: 900, transportFee: 600, additionalFee: 300, examFee: 600 },
-                              { class: "5th", admissionFee: 2200, tuitionFee: 1000, transportFee: 600, additionalFee: 300, examFee: 600 },
-                              { class: "6th", admissionFee: 2500, tuitionFee: 1100, transportFee: 700, additionalFee: 400, examFee: 700 },
-                              { class: "7th", admissionFee: 2500, tuitionFee: 1200, transportFee: 700, additionalFee: 400, examFee: 700 },
-                              { class: "8th", admissionFee: 3000, tuitionFee: 1300, transportFee: 800, additionalFee: 500, examFee: 800 },
-                              { class: "9th", admissionFee: 3000, tuitionFee: 1400, transportFee: 800, additionalFee: 500, examFee: 800 },
-                              { class: "10th", admissionFee: 3500, tuitionFee: 1500, transportFee: 1000, additionalFee: 600, examFee: 1000 },
-                            ];
+                            const feeStructure = (liveSchoolData as any)?.feeStructure || [];
                             const match = feeStructure.find((f: any) => f.class === payClass);
                             if (match) {
                               t = Number(match.tuitionFee || 0);
