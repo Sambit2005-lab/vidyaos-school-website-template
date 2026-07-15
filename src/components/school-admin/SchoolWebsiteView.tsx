@@ -13,7 +13,7 @@ import {
   LineChart, Line, AreaChart, Area, Legend,
 } from "recharts";
 import { useApp } from "../../lib/AppContext";
-import { fetchSchoolConfig, subscribeNotices, addAdmission } from "../../lib/firestoreService";
+import { fetchSchoolConfig, subscribeNotices, addAdmission, saveFeePayment } from "../../lib/firestoreService";
 import { useStudents, useMarksRecords, useExams, useFeeRecords } from "../../lib/useData";
 import { useDynamicSEO } from "../../lib/useDynamicSEO";
 import { cn } from "../../lib/cn";
@@ -554,6 +554,17 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
     ] : []);
     list.unshift(newPayment);
     safeLocalStorage.setItem(`vidyaos_fee_payments_${sid}`, JSON.stringify(list));
+
+    // Save directly to Firestore
+    try {
+      await saveFeePayment(tenantId, {
+        ...newPayment,
+        schoolId: String(sid),
+        tenantId: tenantId
+      });
+    } catch (dbErr) {
+      console.error("Failed to save fee payment to Firestore:", dbErr);
+    }
 
     // Push Notification
     triggerNotification("Fee Payment Uploaded", `₹${payAmount.toLocaleString()} fee payment proof submitted by ${payStudentName} for ${paySelectedMonths.join(", ")}.`);

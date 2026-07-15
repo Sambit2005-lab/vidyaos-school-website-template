@@ -732,6 +732,32 @@ export async function saveFeeRecord(tenantId: string, data: any) {
   return setDoc(doc(db, tenantPath(tenantId), "fee_records", recordId), { ...data, id: recordId });
 }
 
+// ─── Fee Payments Receipt Submissions ───
+
+export function getFeePaymentsRef(tenantId: string) {
+  return collection(db, tenantPath(tenantId), "fee_payments");
+}
+
+export function subscribeFeePayments(tenantId: string, cb: (payments: any[]) => void, schoolId?: string | number): Unsubscribe {
+  const base = getFeePaymentsRef(tenantId);
+  const q = schoolId ? query(base, where("schoolId", "in", [Number(schoolId), String(schoolId)])) : base;
+  return onSnapshot(q, snap => {
+    cb(snap.docs.map(d => ({ id: parseId(d.id), ...d.data() } as any)));
+  }, error => {
+    console.error("subscribeFeePayments error:", error);
+    cb([]);
+  });
+}
+
+export async function saveFeePayment(tenantId: string, data: any) {
+  const paymentId = data.id || "fp_" + Date.now();
+  return setDoc(doc(db, tenantPath(tenantId), "fee_payments", paymentId), { ...data, id: paymentId });
+}
+
+export async function deleteFeePayment(tenantId: string, paymentId: string) {
+  return deleteDoc(doc(db, tenantPath(tenantId), "fee_payments", paymentId));
+}
+
 // ─── Salary Records ───
 
 export function getSalaryRecordsRef(tenantId: string) {
