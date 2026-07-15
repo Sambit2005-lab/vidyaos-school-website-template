@@ -602,75 +602,6 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
     }
   }, [payClass, paySelectedMonths, liveSchoolData]);
 
-  // Auto-fill payment form fields with searched student details and their actual unpaid months
-  useEffect(() => {
-    if (selectedStudentResult) {
-      setPayStudentName(selectedStudentResult.name || "");
-      setPayParentName(selectedStudentResult.parent || "");
-      setPayClass(selectedStudentResult.class || "1st");
-
-      // Calculate base fees structure for the student's class
-      const feeStructure = (liveSchoolData as any)?.feeStructure || [
-        { class: "1st", admissionFee: 2000, tuitionFee: 800, transportFee: 500, additionalFee: 200, examFee: 500 },
-        { class: "2nd", admissionFee: 2000, tuitionFee: 800, transportFee: 500, additionalFee: 200, examFee: 500 },
-        { class: "3rd", admissionFee: 2000, tuitionFee: 900, transportFee: 500, additionalFee: 200, examFee: 500 },
-        { class: "4th", admissionFee: 2200, tuitionFee: 900, transportFee: 600, additionalFee: 300, examFee: 600 },
-        { class: "5th", admissionFee: 2200, tuitionFee: 1000, transportFee: 600, additionalFee: 300, examFee: 600 },
-        { class: "6th", admissionFee: 2500, tuitionFee: 1100, transportFee: 700, additionalFee: 400, examFee: 700 },
-        { class: "7th", admissionFee: 2500, tuitionFee: 1200, transportFee: 700, additionalFee: 400, examFee: 700 },
-        { class: "8th", admissionFee: 3000, tuitionFee: 1300, transportFee: 800, additionalFee: 500, examFee: 800 },
-        { class: "9th", admissionFee: 3000, tuitionFee: 1400, transportFee: 800, additionalFee: 500, examFee: 800 },
-        { class: "10th", admissionFee: 3500, tuitionFee: 1500, transportFee: 1000, additionalFee: 600, examFee: 1000 },
-      ];
-      const sClass = selectedStudentResult.class || "1st";
-      const feeMatch = feeStructure.find((f: any) => f.class === sClass) || { admissionFee: 2000, tuitionFee: 800, transportFee: 500, additionalFee: 200, examFee: 500 };
-      const tuitionFee = Number(feeMatch.tuitionFee || 0);
-      const admissionFee = Number(feeMatch.admissionFee || 0);
-      const transportFee = Number(feeMatch.transportFee || 0);
-      const additionalFee = Number(feeMatch.additionalFee || 0);
-      const examFee = Number(feeMatch.examFee || 0);
-      const monthlyTotal = tuitionFee + transportFee + additionalFee;
-
-      const paid = Number(selectedStudentResult.paidAmount || 0);
-      let paidTemp = paid;
-      if (paidTemp >= admissionFee) paidTemp -= admissionFee;
-      if (paidTemp >= examFee) paidTemp -= examFee;
-
-      const academicMonths = [
-        { id: 1, nameEn: "January 2026", nameOr: "ଜାନୁଆରୀ" },
-        { id: 2, nameEn: "February 2026", nameOr: "ଫେବୃଆରୀ" },
-        { id: 3, nameEn: "March 2026", nameOr: "ମାର୍ଚ୍ଚ" },
-        { id: 4, nameEn: "April 2026", nameOr: "ଏପ୍ରିଲ୍" },
-        { id: 5, nameEn: "May 2026", nameOr: "ମେ" },
-        { id: 6, nameEn: "June 2026", nameOr: "ଜୁନ୍" },
-        { id: 7, nameEn: "July 2026", nameOr: "ଜୁଲାଇ" },
-        { id: 8, nameEn: "August 2026", nameOr: "ଅଗଷ୍ଟ" },
-        { id: 9, nameEn: "September 2026", nameOr: "ସେପ୍ଟେମ୍ବର" },
-        { id: 10, nameEn: "October 2026", nameOr: "ଅକ୍ଟୋବର" },
-        { id: 11, nameEn: "November 2026", nameOr: "ନଭେମ୍ବର" },
-        { id: 12, nameEn: "December 2026", nameOr: "ଡିସେମ୍ବର" }
-      ];
-
-      let maxPaidIndex = -1;
-      academicMonths.forEach((m, index) => {
-        if (paidTemp >= monthlyTotal) {
-          maxPaidIndex = index;
-          paidTemp -= monthlyTotal;
-        }
-      });
-
-      const today = new Date();
-      const currentMonth = today.getMonth() + 1;
-
-      // Extract only unpaid months up to current date
-      const unpaidOverdueMonths = academicMonths
-        .filter((m, idx) => idx > maxPaidIndex && m.id <= currentMonth)
-        .map(m => m.nameEn);
-
-      setPaySelectedMonths(unpaidOverdueMonths);
-    }
-  }, [selectedStudentResult, liveSchoolData]);
-
   const handleParentSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchStudentName || !searchParentName || !searchDob) {
@@ -2056,91 +1987,26 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
                     <div>
                       <label className="block text-xs font-semibold text-gray-600 mb-1.5">Select Months to Pay (Tuition Fee auto-accumulates)</label>
                       <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 bg-gray-50/50 p-2.5 rounded-xl border border-gray-100 max-h-[110px] overflow-y-auto">
-                        {(() => {
-                          let monthsToDisplay = ["January 2026", "February 2026", "March 2026", "April 2026", "May 2026", "June 2026", "July 2026", "August 2026", "September 2026", "October 2026", "November 2026", "December 2026"];
-                          if (selectedStudentResult) {
-                            const feeStructure = (liveSchoolData as any)?.feeStructure || [
-                              { class: "1st", admissionFee: 2000, tuitionFee: 800, transportFee: 500, additionalFee: 200, examFee: 500 },
-                              { class: "2nd", admissionFee: 2000, tuitionFee: 800, transportFee: 500, additionalFee: 200, examFee: 500 },
-                              { class: "3rd", admissionFee: 2000, tuitionFee: 900, transportFee: 500, additionalFee: 200, examFee: 500 },
-                              { class: "4th", admissionFee: 2200, tuitionFee: 900, transportFee: 600, additionalFee: 300, examFee: 600 },
-                              { class: "5th", admissionFee: 2200, tuitionFee: 1000, transportFee: 600, additionalFee: 300, examFee: 600 },
-                              { class: "6th", admissionFee: 2500, tuitionFee: 1100, transportFee: 700, additionalFee: 400, examFee: 700 },
-                              { class: "7th", admissionFee: 2500, tuitionFee: 1200, transportFee: 700, additionalFee: 400, examFee: 700 },
-                              { class: "8th", admissionFee: 3000, tuitionFee: 1300, transportFee: 800, additionalFee: 500, examFee: 800 },
-                              { class: "9th", admissionFee: 3000, tuitionFee: 1400, transportFee: 800, additionalFee: 500, examFee: 800 },
-                              { class: "10th", admissionFee: 3500, tuitionFee: 1500, transportFee: 1000, additionalFee: 600, examFee: 1000 },
-                            ];
-                            const sClass = selectedStudentResult.class || "1st";
-                            const feeMatch = feeStructure.find((f: any) => f.class === sClass) || { admissionFee: 2000, tuitionFee: 800, transportFee: 500, additionalFee: 200, examFee: 500 };
-                            const tuitionFee = Number(feeMatch.tuitionFee || 0);
-                            const admissionFee = Number(feeMatch.admissionFee || 0);
-                            const transportFee = Number(feeMatch.transportFee || 0);
-                            const additionalFee = Number(feeMatch.additionalFee || 0);
-                            const examFee = Number(feeMatch.examFee || 0);
-                            const monthlyTotal = tuitionFee + transportFee + additionalFee;
-
-                            const paid = Number(selectedStudentResult.paidAmount || 0);
-                            let paidTemp = paid;
-                            if (paidTemp >= admissionFee) paidTemp -= admissionFee;
-                            if (paidTemp >= examFee) paidTemp -= examFee;
-
-                            const academicMonths = [
-                              { id: 1, nameEn: "January 2026", nameOr: "ଜାନୁଆରୀ" },
-                              { id: 2, nameEn: "February 2026", nameOr: "ଫେବୃଆରୀ" },
-                              { id: 3, nameEn: "March 2026", nameOr: "ମାର୍ଚ୍ଚ" },
-                              { id: 4, nameEn: "April 2026", nameOr: "ଏପ୍ରିଲ୍" },
-                              { id: 5, nameEn: "May 2026", nameOr: "ମେ" },
-                              { id: 6, nameEn: "June 2026", nameOr: "ଜୁନ୍" },
-                              { id: 7, nameEn: "July 2026", nameOr: "ଜୁଲାଇ" },
-                              { id: 8, nameEn: "August 2026", nameOr: "ଅଗଷ୍ଟ" },
-                              { id: 9, nameEn: "September 2026", nameOr: "ସେପ୍ଟେମ୍ବର" },
-                              { id: 10, nameEn: "October 2026", nameOr: "ଅକ୍ଟୋବର" },
-                              { id: 11, nameEn: "November 2026", nameOr: "ନଭେମ୍ବର" },
-                              { id: 12, nameEn: "December 2026", nameOr: "ଡିସେମ୍ବର" }
-                            ];
-
-                            let maxPaidIndex = -1;
-                            academicMonths.forEach((m, index) => {
-                              if (paidTemp >= monthlyTotal) {
-                                maxPaidIndex = index;
-                                paidTemp -= monthlyTotal;
-                              }
-                            });
-
-                            const today = new Date();
-                            const currentMonth = today.getMonth() + 1;
-
-                            monthsToDisplay = academicMonths
-                              .filter((m, idx) => idx > maxPaidIndex && m.id <= currentMonth)
-                              .map(m => m.nameEn);
-                          }
-
-                          if (monthsToDisplay.length === 0) {
-                            monthsToDisplay = ["January 2026", "February 2026", "March 2026", "April 2026", "May 2026", "June 2026", "July 2026", "August 2026", "September 2026", "October 2026", "November 2026", "December 2026"];
-                          }
-
-                          return monthsToDisplay.map(m => {
-                            const isChecked = paySelectedMonths.includes(m);
-                            return (
-                              <label key={m} className={cn("flex items-center gap-1.5 p-1.5 rounded-lg border text-[10px] cursor-pointer transition-all select-none", isChecked ? "bg-[#1D2D7A]/5 border-[#1D2D7A]/20 text-[#1D2D7A] font-bold" : "bg-white border-gray-200 text-gray-600")}>
-                                <input
-                                  type="checkbox"
-                                  className="accent-[#1D2D7A] h-3 w-3"
-                                  checked={isChecked}
-                                  onChange={() => {
-                                    if (isChecked) {
-                                      setPaySelectedMonths(paySelectedMonths.filter(x => x !== m));
-                                    } else {
-                                      setPaySelectedMonths([...paySelectedMonths, m]);
-                                    }
-                                  }}
-                                />
-                                {m}
-                              </label>
-                            );
-                          });
-                        })()}
+                        {["Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026", "Oct 2026", "Nov 2026", "Dec 2026"].map(m => {
+                          const isChecked = paySelectedMonths.includes(m);
+                          return (
+                            <label key={m} className={cn("flex items-center gap-1.5 p-1.5 rounded-lg border text-[10px] cursor-pointer transition-all select-none", isChecked ? "bg-[#1D2D7A]/5 border-[#1D2D7A]/20 text-[#1D2D7A] font-bold" : "bg-white border-gray-200 text-gray-600")}>
+                              <input
+                                type="checkbox"
+                                className="accent-[#1D2D7A] h-3 w-3"
+                                checked={isChecked}
+                                onChange={() => {
+                                  if (isChecked) {
+                                    setPaySelectedMonths(paySelectedMonths.filter(x => x !== m));
+                                  } else {
+                                    setPaySelectedMonths([...paySelectedMonths, m]);
+                                  }
+                                }}
+                              />
+                              {m}
+                            </label>
+                          );
+                        })}
                       </div>
                     </div>
 
