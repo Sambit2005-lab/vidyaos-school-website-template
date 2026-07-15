@@ -522,6 +522,10 @@ export function SchoolWebsiteView({ onBack, schoolId: propSchoolId }: { onBack?:
       alert("Please fill all fields and upload a screenshot.");
       return;
     }
+    if (!paySelectedMonths || paySelectedMonths.length === 0) {
+      alert("Please select at least one month to pay.");
+      return;
+    }
     setPaySubmitting(true);
     const sid = propSchoolId || "1";
 
